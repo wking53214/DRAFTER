@@ -1,11 +1,11 @@
-"""The Proposer's seat in Elegant's loop: one finding in, one proposed change out."""
+"""The Drafter's seat in Warden's loop: one finding in, one proposed change out."""
 
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Callable, Optional, Sequence
 
-from elegant.models import Defect, FileEdit, Transformation, TransformationStatus
+from warden.models import Defect, FileEdit, Transformation, TransformationStatus
 
 from .fixers import FIXERS
 
@@ -14,12 +14,12 @@ from .fixers import FIXERS
 Fixer = Callable[[Path, Defect], Optional[FileEdit]]
 
 
-class Proposer:
+class Drafter:
     """Walks Ghost's findings in order and proposes the first fix it can make safely.
 
-    One intentional change per call. Elegant applies it, Ghost re-inspects, and
+    One intentional change per call. Warden applies it, Ghost re-inspects, and
     the loop calls again. When no finding has a safe fix, `propose` returns None,
-    which is how the Proposer says it has nothing left. That is not a claim that
+    which is how the Drafter says it has nothing left. That is not a claim that
     the tree is clean; Ghost may still report findings no fixer here handles.
     """
 

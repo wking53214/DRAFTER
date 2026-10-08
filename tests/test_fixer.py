@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-from elegant.models import defects_from_ghost
+from warden.models import defects_from_ghost
 
-from proposer import Proposer
+from drafter import Drafter
 
 
 def _finding(file="README.md", line=3, documented=16, lower=79, writable="yes", detector="doc_test_count_drift"):
@@ -20,7 +20,7 @@ def _readme(root: Path, body: str) -> None:
 
 
 def _propose(root: Path, **kw):
-    return Proposer().propose(root, defects_from_ghost([_finding(**kw)]), "base")
+    return Drafter().propose(root, defects_from_ghost([_finding(**kw)]), "base")
 
 
 def test_a_stale_claim_becomes_a_truthful_sentence(tmp_path: Path):
@@ -62,7 +62,7 @@ def test_a_claim_already_fixed_means_nothing_left(tmp_path: Path):
     assert _propose(tmp_path, line=3) is None
 
 
-def test_unknown_detectors_are_not_this_proposers_business(tmp_path: Path):
+def test_unknown_detectors_are_not_this_drafters_business(tmp_path: Path):
     _readme(tmp_path, "All 16 tests passed.\n")
     assert _propose(tmp_path, line=1, detector="long_function") is None
 
@@ -70,5 +70,5 @@ def test_unknown_detectors_are_not_this_proposers_business(tmp_path: Path):
 def test_one_change_per_proposal(tmp_path: Path):
     _readme(tmp_path, "A. 16 tests passed.\n\nB. 16 tests passed.\n")
     defects = defects_from_ghost([_finding(line=1), _finding(line=3)])
-    proposal = Proposer().propose(tmp_path, defects, "base")
+    proposal = Drafter().propose(tmp_path, defects, "base")
     assert len(proposal.edits) == 1 and len(proposal.known_defects) == 1

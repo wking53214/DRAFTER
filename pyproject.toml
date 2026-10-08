@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "proposer"
+name = "drafter"
 version = "0.1.0"
 description = "The in-loop maker: turns Ghost Tools findings into proposed fixes. Proposes, never writes."
 readme = "README.md"
@@ -21,16 +21,16 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Quality Assurance",
 ]
-dependencies = ["elegant @ git+https://github.com/wking53214/Elegant.git@main"]
+dependencies = ["warden @ git+https://github.com/wking53214/Warden.git@main"]
 
 [project.urls]
-Homepage = "https://github.com/wking53214/Proposer"
+Homepage = "https://github.com/wking53214/Drafter"
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 
 [tool.setuptools]
-packages = ["proposer"]
+packages = ["drafter"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
