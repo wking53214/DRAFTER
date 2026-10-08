@@ -1,4 +1,4 @@
-"""One module per Ghost detector the Proposer knows how to answer."""
+"""One module per Ghost detector the Drafter knows how to answer."""
 
 from .doc_test_count import fix_doc_test_count
 

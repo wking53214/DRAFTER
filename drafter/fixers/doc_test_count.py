@@ -2,7 +2,7 @@
 
 Every number used here comes from Ghost's finding (the claim, the lower bound on
 the real count, the line, and whether Ghost judged the sentence safe to edit).
-The Proposer counts nothing itself.
+The Drafter counts nothing itself.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from elegant.models import Defect, FileEdit
+from warden.models import Defect, FileEdit
 
 #: A list bullet, quote mark or numbered-list marker is kept as it is.
 _MARKER = re.compile(r"^\s*(?:[-*>]\s+|\d+\.\s+)?")
