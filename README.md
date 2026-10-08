@@ -1,5 +1,7 @@
 # Drafter
 
+*Formerly Proposer. Renamed in October 2026; the role is unchanged.*
+
 The in-loop maker. It reads what Ghost Tools found and proposes one fix at a time. It never writes a file.
 
 ## WHAT THIS IS
