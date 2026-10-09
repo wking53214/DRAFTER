@@ -38,6 +38,9 @@ class Drafter:
     for notes, so nothing prints this today; a caller can read it after the run.
     """
 
+    #: The seat contract this Drafter was written against. Warden warns when it is missing and refuses a mismatch.
+    requires_contract = "1"
+
     def __init__(self, fixers: Optional[dict[str, Fixer]] = None) -> None:
         self.fixers = dict(FIXERS if fixers is None else fixers)
         self.last_skipped: list[tuple[str, str]] = []
