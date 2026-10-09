@@ -30,7 +30,7 @@ Homepage = "https://github.com/wking53214/Drafter"
 dev = ["pytest>=8"]
 
 [tool.setuptools]
-packages = ["drafter"]
+packages = ["drafter", "drafter.fixers"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

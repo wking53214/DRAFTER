@@ -1,10 +1,14 @@
 """Ghost's `dead_code`: a top-level function or class nothing references.
 
-Every fact comes from Ghost's finding (name, kind, first and last line, whether
-a framework calls it by name). The Drafter parses nothing. It proposes taking
-the exact lines out; Warden decides whether that is allowed. Warden never
-deletes: it comments the code out with a timestamp, and only after the code
-has passed a keep test and a comment-out test.
+Ghost supplies the facts (name, kind, first and last line, whether a framework
+calls it by name). The Drafter does not parse the file with a real parser. It
+checks, by plain text, that the span Ghost named is exactly one top-level
+definition (see `drafter._pyblock`), takes any decorators directly above it
+along with it, and proposes taking those exact lines out. Anything that does
+not line up is refused with a recorded reason. Warden decides whether the
+removal is allowed: it never deletes, it comments the code out with a
+timestamp, and only after the code has passed a keep test and a comment-out
+test.
 """
 
 from __future__ import annotations
@@ -14,40 +18,38 @@ from typing import Optional
 
 from warden.models import Defect, FileEdit
 
-_KEYWORD = {"function": ("def ", "async def "), "class": ("class ",)}
+from .._pyblock import find_block
+from .._safe import (Reason, attributes_of, check_editable, read_source, refuse,
+                     resolve_in_target, run_fixer, split_lines, whole_int)
+
+_KINDS = {"function", "class"}
 
 
-def fix_dead_code(target: Path, defect: Defect) -> Optional[FileEdit]:
-    attrs = defect.attributes
-    if attrs.get("framework_hook") != "no" or not defect.file:
-        return None
+def fix_dead_code(target: Path, defect: Defect, why: Optional[Reason] = None) -> Optional[FileEdit]:
+    return run_fixer(lambda: _fix(target, defect), why)
+
+
+def _fix(target: Path, defect: Defect) -> FileEdit:
+    attrs = attributes_of(defect)
+    hook = attrs.get("framework_hook")
+    if hook != "no":
+        refuse(f"Ghost does not say 'framework_hook: no' (it says {hook!r}), so a framework may call it")
     name, kind = attrs.get("name"), attrs.get("kind")
-    try:
-        start, end = int(attrs["line_start"]), int(attrs["line_end"])
-    except (KeyError, ValueError):
-        return None
-    if not name or kind not in _KEYWORD or not 1 <= start <= end:
-        return None
-    path = _inside(target, defect.file)
-    if path is None or not path.is_file() or path.suffix != ".py":
-        return None
-    text = path.read_text(encoding="utf-8")
-    lines = text.split("\n")
-    if end > len(lines):
-        return None
-    block = lines[start - 1:end]
-    opener = block[0]
-    if not any(opener.startswith(k + name) and opener[len(k) + len(name):][:1] in {"(", ":", " "}
-               for k in _KEYWORD[kind]):
-        return None
-    old = "\n".join(block) + "\n"
-    if text.count(old) != 1:
-        return None
-    return FileEdit(path=str(path.relative_to(target)), kind="replace", old=old, new="")
-
-
-def _inside(target: Path, file: str) -> Optional[Path]:
-    """The finding's file, only if it really lies inside the target."""
-    candidate = Path(file)
-    candidate = (candidate if candidate.is_absolute() else target / candidate).resolve()
-    return candidate if candidate.is_relative_to(target) else None
+    if not isinstance(name, str) or not name.isidentifier() or not name.isascii():
+        refuse(f"the finding's name {name!r} is not a plain identifier")
+    if kind not in _KINDS:
+        refuse(f"the finding's kind {kind!r} is neither function nor class")
+    start = whole_int(attrs.get("line_start"), "line_start")
+    end = whole_int(attrs.get("line_end"), "line_end")
+    path, rel = resolve_in_target(target, getattr(defect, "file", None))
+    if path.suffix != ".py":
+        refuse(f"{rel.as_posix()} is not a .py file")
+    check_editable(rel)
+    text = read_source(path)
+    body = text[1:] if text.startswith("\ufeff") else text      # the BOM is never part of an edit
+    rows = split_lines(body)
+    first, last = find_block(tuple(r[0] for r in rows), name, kind, start, end)
+    old = "".join(content + ending for content, ending in rows[first:last + 1])
+    if body.count(old) != 1:
+        refuse(f"the lines to remove appear {body.count(old)} times in the file")
+    return FileEdit(path=rel.as_posix(), kind="replace", old=old, new="")
