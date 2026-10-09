@@ -35,15 +35,19 @@ class Drafter:
             edit = fixer(target, defect)
             if edit is None:
                 continue
+            code = edit.path.endswith(".py")
             return Transformation(
                 target=str(target),
                 intent=f"close Ghost finding {defect.identity} ({defect.detector})",
                 architectural_reason=defect.summary,
                 affected_files=(edit.path,),
-                expected_behavior="documentation only; no source behavior changes",
-                preservation_requirements=("no .py file is edited",),
+                expected_behavior=("code is taken out; Warden comments it out, never deletes, "
+                                   "and only after it passes its keep and comment-out tests"
+                                   if code else "documentation only; no source behavior changes"),
+                preservation_requirements=(("the suite stays green", "nothing runs the removed code")
+                                           if code else ("no .py file is edited",)),
                 known_defects=(defect,),
-                transformation_scope="documentation",
+                transformation_scope="code" if code else "documentation",
                 baseline_reference=baseline,
                 evidence=(defect.identity,),
                 edits=(edit,),
