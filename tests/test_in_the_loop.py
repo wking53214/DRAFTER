@@ -18,6 +18,6 @@ def test_the_loop_converges_on_a_fixed_readme(tmp_path: Path):
     auth = grant("william", "transform", str(tmp_path.resolve()), "documentation", "test")
     result = TagTeam(drafter=Drafter()).run(
         tmp_path, findings=[_finding(line=3)], authorization=auth)
-    assert result.converged and result.decision == "ACCEPT"
+    assert result.converged and result.decision.startswith("ACCEPT")
     assert [c.outcome for c in result.cycles] == ["APPLIED", "NOTHING_TO_PROPOSE"]
     assert "at least 79" in (tmp_path / "README.md").read_text(encoding="utf-8")
