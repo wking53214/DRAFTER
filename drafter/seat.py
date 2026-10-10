@@ -41,9 +41,24 @@ class Drafter:
     #: The seat contract this Drafter was written against. Warden warns when it is missing and refuses a mismatch.
     requires_contract = "1"
 
-    def __init__(self, fixers: Optional[dict[str, Fixer]] = None) -> None:
+    #: What each built-in fixer's proposal touches, known without reading any file.
+    SCOPES = {"doc_test_count_drift": "documentation", "dead_code": "code"}
+
+    def __init__(self, fixers: Optional[dict[str, Fixer]] = None, scope: Optional[str] = None) -> None:
         self.fixers = dict(FIXERS if fixers is None else fixers)
         self.last_skipped: list[tuple[str, str]] = []
+        #: The scope the caller is authorised for ("code" or "documentation"), if it says. When set, findings
+        #: whose fix lies outside it are skipped without reading any file, and in-scope findings are tried
+        #: first. When None, findings are tried in the order given, as before.
+        self.scope = scope
+
+    def scope_of(self, item: Any) -> Optional[str]:
+        """Which scope a finding's fix would need ("code" or "documentation"), or None if unknown.
+
+        Cheap: it looks at the detector name only. Every proposal carries the same answer as `scope_hint`.
+        """
+        detector = item.get("detector") if isinstance(item, Mapping) else getattr(item, "detector", None)
+        return self.SCOPES.get(detector) if isinstance(detector, str) else None
 
     def describe_skipped(self) -> tuple[str, ...]:
         """`last_skipped` as one readable line each, for a caller that wants to print it."""
@@ -64,7 +79,7 @@ class Drafter:
         except TypeError:
             self._skip("?", "the findings were not a list")
             return None
-        for item in items:
+        for item in self._in_priority_order(items):
             defect = self._as_defect(item)
             if defect is None:
                 continue
@@ -73,6 +88,10 @@ class Drafter:
             if fixer is None:
                 continue
             fid = finding_id(defect)
+            hint = self.scope_of(defect)
+            if self.scope and hint and hint != self.scope:
+                self._skip(fid, f"its fix needs {hint} scope and this run allows {self.scope}")
+                continue
             mark = len(self.last_skipped)
             edit = self._call(fixer, root, defect, fid)
             if not isinstance(edit, FileEdit) or not isinstance(edit.path, str):
@@ -83,6 +102,12 @@ class Drafter:
         return None
 
     # -- internals ---------------------------------------------------------
+
+    def _in_priority_order(self, items: Sequence[Any]) -> list[Any]:
+        """In-scope findings first (stable), when the scope is known; otherwise the order given."""
+        if not self.scope:
+            return list(items)
+        return sorted(items, key=lambda i: 0 if self.scope_of(i) in (self.scope, None) else 1)
 
     def _skip(self, fid: str, reason: str) -> None:
         self.last_skipped.append((fid, reason))
@@ -112,7 +137,7 @@ class Drafter:
     def _wrap(self, root: Path, defect: Defect, edit: FileEdit, baseline: str, fid: str) -> Optional[Transformation]:
         try:
             code = edit.path.endswith(".py")
-            return Transformation(
+            proposal = Transformation(
                 target=str(root),
                 intent=f"close Ghost finding {defect.identity} ({defect.detector})",
                 architectural_reason=defect.summary,
@@ -129,6 +154,8 @@ class Drafter:
                 edits=(edit,),
                 status=TransformationStatus.PROPOSED,
             )
+            proposal.scope_hint = proposal.transformation_scope     # a cheap read for the caller
+            return proposal
         except Exception as err:  # noqa: BLE001 - safe or silent
             self._skip(fid, f"the proposal could not be built ({type(err).__name__})")
             return None

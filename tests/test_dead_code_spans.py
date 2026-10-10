@@ -44,14 +44,15 @@ def test_a_span_that_stops_mid_body_is_refused(tmp_path):
 
 def test_a_decorator_directly_above_goes_with_the_def(tmp_path):
     text = KEEP + "@decorator\ndef orphan():\n    return 2\n"
-    old, _ = _old(tmp_path, text, start=6, end=7)          # Ghost starts at the def, not the decorator
-    assert old == "@decorator\ndef orphan():\n    return 2\n"
+    # Ghost starts at the def, not the decorator. A decorator may register the function, so it is now refused.
+    old, drafter = _old(tmp_path, text, start=6, end=7)
+    assert old is None and "decorator" in drafter.last_skipped[0][1]
 
 
 def test_several_and_multi_line_decorators_all_go(tmp_path):
     text = KEEP + "@one\n@two(\n    1,\n)\ndef orphan():\n    return 2\n"
-    old, _ = _old(tmp_path, text, start=9, end=10)
-    assert old == "@one\n@two(\n    1,\n)\ndef orphan():\n    return 2\n"
+    old, drafter = _old(tmp_path, text, start=9, end=10)
+    assert old is None and "decorator" in drafter.last_skipped[0][1]
 
 
 def test_a_decorator_separated_by_a_comment_is_refused_not_stranded(tmp_path):
@@ -158,8 +159,8 @@ def test_a_leading_bom_and_crlf_endings_are_preserved(tmp_path):
 
 
 def test_the_same_input_gives_the_same_proposal(tmp_path):
-    root = _write(tmp_path, KEEP + "@d\ndef orphan():\n    return 2\n")
-    finding = dead_finding(start=6, end=7)
+    root = _write(tmp_path, KEEP + "def orphan():\n    return 2\n")
+    finding = dead_finding(start=5, end=6)
     first, _ = propose(root, finding)
     second, _ = propose(root, finding)
     assert [(e.path, e.kind, e.old, e.new) for e in first.edits] == [(e.path, e.kind, e.old, e.new) for e in second.edits]

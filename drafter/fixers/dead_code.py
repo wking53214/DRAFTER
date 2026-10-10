@@ -19,6 +19,7 @@ from typing import Optional
 from warden.models import Defect, FileEdit
 
 from .._pyblock import find_block
+from .._reach import check_decorators, check_unreachable
 from .._safe import (Reason, attributes_of, check_editable, read_source, refuse,
                      resolve_in_target, run_fixer, split_lines, whole_int)
 
@@ -34,6 +35,10 @@ def _fix(target: Path, defect: Defect) -> FileEdit:
     hook = attrs.get("framework_hook")
     if hook != "no":
         refuse(f"Ghost does not say 'framework_hook: no' (it says {hook!r}), so a framework may call it")
+    dynamic = attrs.get("dynamic_lookup_possible", "no")
+    if dynamic != "no":
+        refuse(f"Ghost says a computed lookup is possible here (dynamic_lookup_possible: {dynamic!r}), "
+               "so 'unused' cannot be trusted")
     name, kind = attrs.get("name"), attrs.get("kind")
     if not isinstance(name, str) or not name.isidentifier() or not name.isascii():
         refuse(f"the finding's name {name!r} is not a plain identifier")
@@ -49,6 +54,9 @@ def _fix(target: Path, defect: Defect) -> FileEdit:
     body = text[1:] if text.startswith("\ufeff") else text      # the BOM is never part of an edit
     rows = split_lines(body)
     first, last = find_block(tuple(r[0] for r in rows), name, kind, start, end)
+    lines = [r[0] for r in rows]
+    check_decorators(lines, first, last, name, kind)
+    check_unreachable(target, rel, name, first, last)
     old = "".join(content + ending for content, ending in rows[first:last + 1])
     if body.count(old) != 1:
         refuse(f"the lines to remove appear {body.count(old)} times in the file")

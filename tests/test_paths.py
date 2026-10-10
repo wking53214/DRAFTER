@@ -26,7 +26,7 @@ def test_the_path_as_given_wins_over_the_stripped_path(tmp_path):
     root = _target(tmp_path)
     (root / "tgt").mkdir()
     (root / "tgt" / "m.py").write_text(SRC, encoding="utf-8")
-    (root / "m.py").write_text("def other():\n    return 0\n\n\ndef orphan():\n    return 3\n", encoding="utf-8")
+    (root / "m.py").write_text("def other():\n    return 0\n\n\ndef sibling():\n    return 3\n", encoding="utf-8")
     proposal, _ = propose(root, dead_finding(file="tgt/m.py"))
     assert proposal.edits[0].path == "tgt/m.py" and "return 2" in proposal.edits[0].old
 
