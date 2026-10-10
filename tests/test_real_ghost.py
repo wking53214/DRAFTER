@@ -63,34 +63,33 @@ def _readme_tree(root):
         "# Docs\n\nCoverage is 95% and the suite has 5 tests passing, 3 bugs fixed.\n", encoding="utf-8")
 
 
-def test_real_readme_claims_in_the_root_and_a_subfolder_are_proposed(tmp_path):
+def test_real_root_readme_claim_is_proposed_and_the_subfolder_one_is_declined(tmp_path):
     ghost_root()
     root = tmp_path / "tgt"
     _readme_tree(root)
     findings = [f for f in real_findings(root) if f["detector"] == "doc_test_count_drift"]
     assert sorted(f["evidence"]["file"] for f in findings) == ["README.md", "docs/README.md"]
     assert all(f["attributes"]["writable"] == "yes" for f in findings)
-    defects = defects_from_ghost(findings)
     seen = {}
-    for defect in defects:
-        proposal = Drafter().propose(root, (defect,), "base")
-        assert proposal is not None
-        seen[proposal.edits[0].path] = proposal.edits[0].new
+    for defect in defects_from_ghost(findings):
+        drafter = Drafter()
+        proposal = drafter.propose(root, (defect,), "base")
+        if defect.file == "docs/README.md":
+            assert proposal is None and "root README" in drafter.last_skipped[0][1]
+        else:
+            seen[proposal.edits[0].path] = proposal.edits[0].new
+    assert list(seen) == ["README.md"]
     assert ("The suite is healthy: at least 40 `test_*` functions "
             "(an earlier version of this document gave 5).") in seen["README.md"]
-    assert ("Coverage is 95% and the suite has at least 40 `test_*` functions "
-            "(an earlier version of this document gave 5), 3 bugs fixed.") in seen["docs/README.md"]
 
 
-def test_the_real_loop_fixes_both_readmes_and_converges(tmp_path):
+def test_the_real_loop_fixes_the_root_readme_only_and_converges(tmp_path):
     ghost_root()
     root = tmp_path / "tgt"
     _readme_tree(root)
     (root / "pkg").mkdir()
     result, _ = run_loop(root, scope="documentation")
-    assert result.converged and result.decision.startswith("ACCEPT"), result.notes
-    assert [c.outcome for c in result.cycles] == ["APPLIED", "APPLIED", "NOTHING_TO_PROPOSE"]
-    for rel in ("README.md", "docs/README.md"):
-        text = (root / rel).read_text(encoding="utf-8")
-        assert "at least 40 `test_*` functions" in text and "5 tests" not in text
-    assert [f for f in real_findings(root) if f["detector"] == "doc_test_count_drift"] == []
+    assert [c.outcome for c in result.cycles] == ["APPLIED", "NOTHING_TO_PROPOSE"], result.notes
+    assert "at least 40 `test_*` functions" in (root / "README.md").read_text(encoding="utf-8")
+    sub = (root / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "5 tests passing" in sub                                  # left alone: it may describe something else

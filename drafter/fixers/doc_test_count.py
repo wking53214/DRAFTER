@@ -60,6 +60,9 @@ def _fix(target: Path, defect: Defect) -> FileEdit:
     check_editable(rel)
     if path.name.upper().startswith(_HISTORY):
         refuse(f"{path.name} is a changelog-style record of the past, not a live claim")
+    if len(rel.parts) != 1 or not path.name.upper().startswith("README"):
+        refuse(f"{rel.as_posix()} is not the project's root README; a count in a sub-package or other "
+               "document may describe something else")
     text = read_source(path)
     body = text[1:] if text.startswith("\ufeff") else text
     rows = split_lines(body)
@@ -207,7 +210,7 @@ def _rewrite(line: str, documented: int, lower: int) -> str:
         if not m.group("verb") and not re.match(r"\s*[,.]", line[m.end():]):
             continue                      # not the shape Ghost reports (it needs passed/passing/collected or , .)
         s, e = m.start(), m.end()
-        problem = _claim_problem(line, s, e)
+        problem = _claim_problem(line, s, e) or _about_something_else(line, s, e)
         if problem:
             first_problem = first_problem or problem
             continue
@@ -219,6 +222,39 @@ def _rewrite(line: str, documented: int, lower: int) -> str:
         return line[:s] + claim + line[e:]
     refuse(first_problem or f"no '{documented} tests' claim found on that line")
     raise AssertionError  # unreachable
+
+
+#: Words before the number that mean the sentence is about some other suite or a past event.
+_ELSEWHERE_BEFORE = re.compile(
+    r"\b(?:upstream|downstream|vendored|fork|forked|dependency|dependencies|their|its|other|another|"
+    r"add|adds|added|adding|new|write|wrote|written|before|after|previously|formerly|was|were|had|"
+    r"fix|fixes|fixed|fixing|broke|broken|from|python|py|pytest|node|ruby|go|rust|java|version|linux|windows|macos|ubuntu|darwin)\b",
+    re.IGNORECASE)
+#: What after the number means the claim is one half of a result line, or about a platform.
+_ELSEWHERE_AFTER = re.compile(
+    r"\b(?:upstream|downstream|failed|failing|failures?|errors?|skipped|xfail(?:ed)?|xpass(?:ed)?|"
+    r"deselected|warnings?|on\s+(?:python|py|windows|macos|linux)|under\s+python|with\s+python)\b|"
+    r"\b[0-9]+\s+(?:fail|error|skip)",
+    re.IGNORECASE)
+_SENTENCE_BREAK = re.compile(r"[.!?:;](?:\s|$)")
+
+
+def _about_something_else(line: str, s: int, e: int) -> Optional[str]:
+    """Refuse unless the phrase reads as a plain statement about this project's own suite."""
+    start = 0
+    for m in _SENTENCE_BREAK.finditer(line, 0, s):
+        start = m.end()
+    before = line[start:s]
+    if _ELSEWHERE_BEFORE.search(before):
+        return "the sentence looks like it is about another suite, a version, or a past change, not this project's own count"
+    end = len(line)
+    m = _SENTENCE_BREAK.search(line, e)
+    if m:
+        end = m.start()
+    after = line[e:end]
+    if _ELSEWHERE_AFTER.search(after):
+        return "the claim sits beside other counts or a platform, so rewriting it could change what the sentence says"
+    return None
 
 
 def _claim_problem(line: str, s: int, e: int) -> Optional[str]:
