@@ -12,7 +12,7 @@ import pytest
 from warden.models import defects_from_ghost
 
 from drafter import Drafter
-from support import ghost_root, many_tests, real_findings, run_loop
+from support import ghost_root, init_repo, many_tests, real_findings, run_loop
 
 MODULE = "def used():\n    return 1\n\n\ndef orphan():\n    return 2\n"
 TEST_U = "from {imp} import used\n\n\ndef test_u():\n    assert used() == 1\n"
@@ -49,10 +49,27 @@ def test_a_real_dead_code_finding_is_proposed_and_applied_cleanly(tmp_path, wher
     assert proposal.edits[0].old == "def orphan():\n    return 2\n"
 
     result, _ = run_loop(root)
-    assert result.converged and result.decision.startswith("ACCEPT"), result.notes
+    assert result.converged and result.decision == "ACCEPT", result.notes
     assert [c.outcome for c in result.cycles] == ["APPLIED", "NOTHING_TO_PROPOSE"]
     text = (root.joinpath(*where) / "m.py").read_text(encoding="utf-8")
     assert "# def orphan():" in text and "def used():\n    return 1" in text
+
+
+def test_an_unverified_run_puts_the_applied_edit_back(tmp_path):
+    """Without SWIZZLE and ASSAY nothing is measured, so the run is ACCEPT_UNVERIFIED and Warden restores the file."""
+    from warden.authorization import grant
+    from warden.tagteam import TagTeam
+
+    ghost_root()
+    root = tmp_path / "tgt"
+    _build_code(root, ())
+    init_repo(root)
+    original = (root / "m.py").read_text(encoding="utf-8")
+    auth = grant("william", "transform", str(root.resolve()), "code", "test")
+    result = TagTeam(drafter=Drafter(), ghost_tools_root=ghost_root()).run(root, authorization=auth)
+    assert result.decision == "ACCEPT_UNVERIFIED", result.notes
+    assert "The tree was put back" in " ".join(result.notes)
+    assert (root / "m.py").read_text(encoding="utf-8") == original
 
 
 def _readme_tree(root):
@@ -89,6 +106,7 @@ def test_the_real_loop_fixes_the_root_readme_only_and_converges(tmp_path):
     _readme_tree(root)
     (root / "pkg").mkdir()
     result, _ = run_loop(root, scope="documentation")
+    assert result.decision == "ACCEPT", result.notes
     assert [c.outcome for c in result.cycles] == ["APPLIED", "NOTHING_TO_PROPOSE"], result.notes
     assert "at least 40 `test_*` functions" in (root / "README.md").read_text(encoding="utf-8")
     sub = (root / "docs" / "README.md").read_text(encoding="utf-8")

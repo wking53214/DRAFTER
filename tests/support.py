@@ -5,6 +5,8 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -36,17 +38,47 @@ def many_tests(count: int = 40) -> str:
     return "".join(f"def test_case_{i}():\n    assert True\n\n" for i in range(count))
 
 
+def sibling(name: str) -> Path:
+    """A sibling checkout of the circuit (SWIZZLE, ASSAY), or skip. CIRCUIT_ROOT overrides the folder."""
+    base = Path(os.environ.get("CIRCUIT_ROOT") or Path(__file__).resolve().parents[2])
+    if not (base / name).is_dir():
+        pytest.skip(f"the full gate needs the {name} checkout beside this one (or set CIRCUIT_ROOT)")
+    return base / name
+
+
+def full_gate_kwargs() -> dict:
+    """The complete Warden gate: real Ghost, real SWIZZLE and ASSAY, and the real Judge.
+
+    Only a run with every check measured can end in a plain ACCEPT. Anything less is
+    ACCEPT_UNVERIFIED, and Warden puts the edit back.
+    """
+    seat = pytest.importorskip("judge.seat", reason="the full gate needs the Judge")
+    return {"ghost_tools_root": ghost_root(), "swizzle_root": sibling("swizzle"),
+            "assay_root": sibling("assay"), "judge": seat.Judge()}
+
+
+def init_repo(root: Path) -> None:
+    """Make `root` a git repo with everything committed. Warden judges a change against a clean, tracked tree."""
+    def git(*args):
+        subprocess.run(["git", "-C", str(root), "-c", "user.name=test", "-c", "user.email=test@example.com",
+                        *args], check=True, capture_output=True)
+    git("init", "-q")
+    git("add", "-A")
+    git("commit", "-q", "-m", "base")
+
+
 def run_loop(target: Path, scope: str = "code"):
-    """The real Warden loop around the real Drafter, with the real Ghost re-inspecting."""
+    """The real Warden loop around the real Drafter, with the real Ghost, SWIZZLE, ASSAY and Judge."""
     pytest.importorskip("warden.tagteam", reason="needs Warden")
     from warden.authorization import grant
     from warden.tagteam import TagTeam
 
     from drafter import Drafter
 
+    init_repo(Path(target))
     auth = grant("william", "transform", str(Path(target).resolve()), scope, "test")
     drafter = Drafter()
-    result = TagTeam(drafter=drafter, ghost_tools_root=ghost_root()).run(target, authorization=auth)
+    result = TagTeam(drafter=drafter, **full_gate_kwargs()).run(target, authorization=auth)
     return result, drafter
 
 
