@@ -4,12 +4,12 @@ from pathlib import Path
 
 import pytest
 
-import warden.tagteam as tagteam
 from warden.authorization import grant
 from warden.models import defects_from_ghost
 from warden.tagteam import TagTeam
 
 from drafter import Drafter
+from support import full_gate_kwargs, init_repo, real_findings
 
 SOURCE = "def keep():\n    return 1\n\n\ndef unused():\n    return 2\n"
 
@@ -62,38 +62,32 @@ def test_it_refuses_when_the_same_block_appears_twice(tmp_path):
     assert _propose(tmp_path, start=1, end=2) is None
 
 
-@pytest.fixture
-def ghost(monkeypatch):
-    def scan(target, **kw):
-        text = (Path(target) / "pkg" / "mod.py").read_text(encoding="utf-8")
-        return () if "WARDEN COMMENTED OUT" in text else (_finding(),)
-
-    monkeypatch.setattr(tagteam, "ghost_scan", scan)
-    monkeypatch.setattr(TagTeam, "_calibrate", lambda self, python, notes: True)
-
-
 def _run(root: Path):
+    """The full gate: real Ghost, SWIZZLE, ASSAY and Judge. Only a plain ACCEPT keeps the edit."""
+    init_repo(root)
     auth = grant("william", "transform", str(root.resolve()), "code", "test")
-    return TagTeam(drafter=Drafter(), ghost_tools_root=Path(".")).run(
-        root, findings=[_finding()], authorization=auth)
+    # No findings passed in: Ghost must scan for real, because the Judge reads Ghost's baseline report from that scan.
+    return TagTeam(drafter=Drafter(), **full_gate_kwargs()).run(root, authorization=auth)
 
 
-def test_in_the_loop_unused_code_is_commented_out_with_a_timestamp(tmp_path, ghost):
+def test_in_the_loop_unused_code_is_commented_out_with_a_timestamp(tmp_path):
     _repo(tmp_path)
     result = _run(tmp_path)
     text = (tmp_path / "pkg" / "mod.py").read_text(encoding="utf-8")
-    assert result.decision.startswith("ACCEPT")
+    assert result.decision == "ACCEPT", result.notes
     assert "# WARDEN COMMENTED OUT 20" in text and "# def unused():" in text
     assert "def keep():\n    return 1" in text and "\ndef unused" not in text
 
 
-def test_in_the_loop_code_the_suite_runs_by_name_is_left_alone(tmp_path, ghost):
+def test_in_the_loop_code_the_suite_runs_by_name_is_left_alone(tmp_path):
     """Nothing imports it and Ghost says it is unused, but the suite reaches it by string."""
     _repo(tmp_path, test=(
         "import importlib\n\ndef test_dynamic():\n"
         "    mod = importlib.import_module('pkg.mod')\n"
         "    assert getattr(mod, 'un' + 'used')() == 2\n"))
     result = _run(tmp_path)
-    assert result.decision.startswith("ACCEPT")
+    assert result.decision == "ACCEPT", result.notes
     assert (tmp_path / "pkg" / "mod.py").read_text(encoding="utf-8") == SOURCE
-    assert any("keep test FAILED" in n for n in result.notes)
+    # Real Ghost marks the code as reachable by computed lookup, so the Drafter refuses to propose removing it.
+    dead = [f for f in real_findings(tmp_path) if f["detector"] == "dead_code"]
+    assert Drafter().propose(tmp_path, defects_from_ghost(dead), "base") is None
