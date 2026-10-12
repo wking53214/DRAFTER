@@ -6,9 +6,9 @@ The in-loop maker. It reads what Ghost Tools found and proposes one fix at a tim
 
 ## WHAT THIS IS
 
-One of six repositories in a stack that improves code under human control. Drafter has one job: given a Ghost Tools finding, return the change that would close it, as data. [Warden](https://github.com/wking53214/Warden) runs the loop around it. Warden asks Drafter for a change, checks a person granted it, runs the target's tests, applies the change, runs the tests again, and has Ghost look again. Drafter is then asked again, until it has nothing left to propose.
+One of seven repositories in a stack that improves code under human control. Drafter has one job: given a Ghost Tools finding, return the change that would close it, as data. [Warden](https://github.com/wking53214/Warden) runs the loop around it. Warden asks Drafter for a change, checks a person granted it, runs the target's tests, applies the change, runs the tests again, and has Ghost look again. Drafter is then asked again, until it has nothing left to propose.
 
-Version `0.1.0`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal, and on nothing else.
+Version `0.1.0`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal, and on nothing else. It is pinned to Warden tag `v0.9.0` (`882b2be`); see "Testing against the pin" below.
 
 ## WHAT IT DOES NOT OWN
 
@@ -58,7 +58,7 @@ Drafter imports `warden.models` and nothing else from the stack. It does not imp
 ## Install
 
 ```bash
-pip install git+https://github.com/wking53214/Warden.git
+pip install "git+https://github.com/wking53214/Warden.git@v0.9.0"
 pip install git+https://github.com/wking53214/Drafter.git
 ```
 
@@ -95,7 +95,13 @@ Warden calls `Drafter.propose` once per cycle and stops calling it when it retur
 - With the real Ghost scan and the real Warden loop, a root-level module, a nested module, a three-folder-deep module and two README claims (one in the root, one in a subfolder) each produce a proposal that Warden applies cleanly, and the loop then converges. **VERIFIED** by `tests/test_real_ghost.py`.
 - It imports only `warden.models`, never writes, never counts. **VERIFIED** by `tests/test_independence.py`.
 
-225 tests exist in this tree. All 225 passed on CPython 3.13 on 2026-10-09 with the real Ghost Tools and Warden on the path. Without Ghost Tools importable, 220 run and the 5 end-to-end tests skip with a stated reason.
+271 tests are collected in this tree. With Ghost Tools and Warden on the import path, 271 pass on Warden `main` on CPython 3.13 (run 2026-10-12).
+
+Without Ghost Tools on the import path, the 6 tests in `tests/test_real_ghost.py` skip with the reason "the real Ghost scan needs ghost_buster on PYTHONPATH". Nothing else is skipped. Install Ghost Tools (`pip install "git+https://github.com/wking53214/ghost_tools.git@V1.9.1"`) to run them.
+
+### Testing against the pin
+
+Drafter's tests import Warden from the import path. Against the pinned tag `v0.9.0`, 270 pass and one fails: `tests/test_real_ghost.py::test_an_unverified_run_puts_the_applied_edit_back`. That test expects Warden's held-result rule, which Warden added on `main` after `v0.9.0`. Moving the pin to a newer Warden tag, or changing this test, is a decision for the maintainer; it has not been made here.
 
 ## WHAT IS BEAUTIFUL
 
