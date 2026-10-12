@@ -8,7 +8,7 @@ The in-loop maker. It reads what Ghost Tools found and proposes one fix at a tim
 
 One of seven repositories in a stack that improves code under human control. Drafter has one job: given a Ghost Tools finding, return the change that would close it, as data. [Warden](https://github.com/wking53214/Warden) runs the loop around it. Warden asks Drafter for a change, checks a person granted it, runs the target's tests, applies the change, runs the tests again, and has Ghost look again. Drafter is then asked again, until it has nothing left to propose.
 
-Version `0.1.0`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal, and on nothing else. It is pinned to Warden tag `v0.9.0` (`882b2be`); see "Testing against the pin" below.
+Version `0.1.0`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal, and on nothing else. It is pinned to Warden tag `v0.10.0`; see "Testing against the pin" below.
 
 ## WHAT IT DOES NOT OWN
 
@@ -58,7 +58,7 @@ Drafter imports `warden.models` and nothing else from the stack. It does not imp
 ## Install
 
 ```bash
-pip install "git+https://github.com/wking53214/Warden.git@v0.9.0"
+pip install "git+https://github.com/wking53214/Warden.git@v0.10.0"
 pip install git+https://github.com/wking53214/Drafter.git
 ```
 
@@ -101,7 +101,7 @@ Without Ghost Tools on the import path, the 6 tests in `tests/test_real_ghost.py
 
 ### Testing against the pin
 
-Drafter's tests import Warden from the import path. Against the pinned tag `v0.9.0`, 270 pass and one fails: `tests/test_real_ghost.py::test_an_unverified_run_puts_the_applied_edit_back`. That test expects Warden's held-result rule, which Warden added on `main` after `v0.9.0`. Moving the pin to a newer Warden tag, or changing this test, is a decision for the maintainer; it has not been made here.
+Drafter's tests import Warden from the import path. Against the pinned tag `v0.10.0`, all 271 pass in the full circuit environment (checked 2026-10-12). `v0.10.0` carries the held-result rule that `tests/test_real_ghost.py::test_an_unverified_run_puts_the_applied_edit_back` expects; `v0.9.0` does not, so that test fails on the old pin.
 
 ## WHAT IS BEAUTIFUL
 
