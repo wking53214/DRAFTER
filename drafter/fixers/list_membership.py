@@ -24,6 +24,15 @@ Tokens come from the standard library's tokenizer. It builds no syntax tree and
 decides nothing about the program; it only says where strings, names and
 brackets begin and end, which is what a hand-rolled scanner gets wrong. A file
 the tokenizer cannot read is refused.
+
+KNOWN LIMIT (red team, 2026-10-14)
+
+`x in NAME` answers False for an unhashable `x` (a list, a dict) when NAME is a
+list, and raises TypeError when NAME is a set. The tokens cannot say what `x`
+is. If a caller ever passes an unhashable value, the set version crashes where
+the list version was silently False. Warden's suite gate is the only guard, and
+it holds only if a test exercises that call. Reported here rather than refused,
+because refusing would mean refusing every fix.
 """
 
 from __future__ import annotations
@@ -45,6 +54,8 @@ _NUMBER = re.compile(r"[0-9]+(?:\.[0-9]+)?", re.ASCII)
 _STRING_PREFIX = re.compile(r"(?:[rbuRBU]|[rR][bB]|[bB][rR])?", re.ASCII)
 _CONSTANTS = {"None", "True", "False"}
 _OPEN = {"[": "]", "(": ")"}
+#: A comparison chained onto the name (`x in NAME == y`, `x in NAME is z`) compares the container itself.
+_COMPARATORS = frozenset({"==", "!=", "<", ">", "<=", ">=", "is", "in", "not"})
 #: Python 3.12+ gives f-strings their own token type; older versions tokenize them as STRING with an f prefix.
 _FSTRING_START = getattr(tokenize, "FSTRING_START", -1)
 
@@ -200,6 +211,10 @@ def _only_membership_elsewhere(tokens: list[tokenize.TokenInfo], name: str, open
                    f"({_shape(before, after)}); a set would not mean the same thing there")
         if after is not None and after.type == tokenize.OP and after.string in ("[", ".", "("):
             refuse(f"{name} is indexed, called or dereferenced on line {tok.start[0]}")
+        if after is not None and (after.string in _COMPARATORS):
+            # `x in NAME == y` chains into `NAME == y`, where a list and a set are never equal.
+            refuse(f"{name} is compared on line {tok.start[0]} (`{after.string}`), and a set does not "
+                   "compare equal to a list")
         if _is_iteration(tokens, sig, n):
             refuse(f"line {tok.start[0]} iterates over {name} (`for ... in {name}`), and a set has no order")
 

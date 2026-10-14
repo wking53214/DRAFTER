@@ -123,6 +123,8 @@ def test_an_element_that_is_not_a_plain_literal_is_refused(tmp_path, literal, wh
     ("    return BLOCKED\n", "not a membership test"),
     ("    return getattr(items, 'BLOCKED')\n", "inside a string"),
     ("    return f(BLOCKED=1)\n", "not a membership test"),
+    ("    return items in BLOCKED == items\n", "compared"),
+    ("    return items in BLOCKED is not None\n", "compared"),
 ])
 def test_any_other_use_in_the_file_is_refused(tmp_path, use, why):
     _repo(tmp_path, SOURCE + "\n\ndef other(items):\n" + use)
