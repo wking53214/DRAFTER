@@ -142,6 +142,7 @@ The tests named above: against hand-built Ghost findings on scratch trees, and (
 ## KNOWN DEFECTS
 
 - A list item or paragraph nested four or more spaces deep is refused as if it were a code block, even when it is a nested list. This costs a missed fix, not a wrong one.
+- The list fixer cannot see what is on the left of `in`. Against a list, `x in NAME` is False for an unhashable `x`; against a set it raises `TypeError`. If a caller ever passes a list or a dict there, the fixed code crashes where the old code was silently False, and only a test that exercises that call will catch it. Found by red team on 2026-10-14; left as a limit because refusing it would refuse every fix.
 - A line that has a `|` anywhere is treated as a table row and refused.
 
 ## WHAT REMAINS OUTSTANDING
