@@ -41,7 +41,7 @@ Ghost finding  ->  Drafter.propose(target, findings, baseline)  ->  Transformati
 
 - **One intentional change per proposal.** Several findings mean several turns of the loop.
 - **Ghost's facts, not Drafter's.** A fixer takes the claim, the lower bound, the line, the name and the `writable` flag from the finding. It never counts tests or decides what is unused.
-- **Safe or silent.** A fixer returns nothing rather than guess. Every refusal also writes a plain-language reason into `Drafter.last_skipped`, a list of `(finding id, reason)` for the latest call. Warden's Drafter protocol has no channel for notes, so Warden does not print it today. `Drafter.describe_skipped()` returns the same list as readable lines for any caller that wants them.
+- **Safe or silent.** A fixer returns nothing rather than guess. Every refusal also writes a plain-language reason into `Drafter.last_skipped`, a list of `(finding id, reason)` for the latest call. `Drafter.describe_skipped()` returns the same list as readable lines; Warden reads it after every call and prints the lines as `drafter_skipped` in its JSON, so a person can see why a finding was left alone.
 - **Finding the file.** The path in a finding is tried as given under the target. Only if no such file exists is a leading folder equal to the target's own name removed (older Ghost output spelled a root-level file as `tgt/m.py`). The file must be a real file inside the target: no `..`, no symlink on the way, not under `tests`, `.git`, `.venv` or `.github`, and not a test file or a test or build configuration file.
 - **Checking Ghost's lines.** Before proposing to remove code, Drafter reads the file as plain text (it may not use a Python parser) and requires that Ghost's lines are exactly one `def`, `async def` or `class` at the left edge, running to where Ghost says it ends. Anything odd is refused: a body on the header line, tabs mixed with spaces, a backslash line continuation, a multi-line string with text at the left edge, a second definition of the same name, or the name used as a decorator.
 - **Smallest possible document edit.** Only the claim phrase (the number, "tests", and a following "passed", "passing" or "collected") is replaced. The rest of the line is untouched. A leading BOM and the file's line endings are kept.
@@ -49,7 +49,7 @@ Ghost finding  ->  Drafter.propose(target, findings, baseline)  ->  Transformati
 - **No writes.** Drafter never opens a file for writing. A test reads its own source to prove it.
 - **Conservative removal.** Ghost's "dead" means no syntax node names the function. Drafter also declines (and records why in `describe_skipped`) when Ghost's `dynamic_lookup_possible` is anything but `no`; when the name appears anywhere in the repository outside its own definition (a string, an attribute, an `__all__`, a `.pyi` stub, a config or docs file, an import or re-export, `TYPE_CHECKING`); when a file in the same package looks things up by a computed name or glues a piece of the name onto a quoted prefix or suffix; when the module is star-imported; when it carries any decorator (a call or attribute form is treated as registering); or when it has a dunder, protocol, abstract, property or overload role. A call inside `try/except` is not evidence of safety.
 - **Test-count claims.** Only the project's root README is rewritten, and only when the sentence reads as this project's own suite. Sub-package READMEs, other documents, "upstream has N tests", "added N tests", "before the fix, N tests failed", platform or version phrases, and a count followed by "failed", "skipped" or "errors" are declined.
-- **Scope.** Every proposal carries `scope_hint` (`"code"` or `"documentation"`), and `Drafter.scope_of(finding)` answers the same from the detector name alone, with no file reads. `Drafter(scope="documentation")` tries in-scope findings first and skips the rest.
+- **Scope.** Every proposal carries `scope_hint` (`"code"` or `"documentation"`), and `Drafter.scope_of(finding)` answers the same from the detector name alone, with no file reads. `Drafter(scope="documentation")` tries in-scope findings first and skips the rest. Warden sets `scope` from the human grant before the first call (Warden 0.11.0 or newer), so under a documentation grant the dead-code fixer is skipped with a reason instead of being proposed and declined.
 
 ## IMPORTANT BOUNDARIES
 
@@ -93,11 +93,12 @@ Warden calls `Drafter.propose` once per cycle and stops calling it when it retur
 - A root-level file reported as `tgt/m.py` is found. **VERIFIED** by `tests/test_paths.py` and by `tests/test_real_ghost.py`.
 - Odd input (a file that is not UTF-8, missing or wrong-typed fields, junk instead of findings, a bad target) gives no proposal and a reason, never a crash. **VERIFIED** by `tests/test_odd_input.py`.
 - With the real Ghost scan and the real Warden loop, a root-level module, a nested module, a three-folder-deep module and two README claims (one in the root, one in a subfolder) each produce a proposal that Warden applies cleanly, and the loop then converges. **VERIFIED** by `tests/test_real_ghost.py`.
+- Seated in the whole circuit (Ghost, SWIZZLE, ASSAY, Judge and Burnish all live, through `warden tagteam --stack`), a dead function is commented out under a `code` grant and skipped with a reason under a `documentation` grant; both runs end `ACCEPT`, exit 0. **VERIFIED** by hand on 2026-10-14 on a scratch repository; recorded in Warden's `docs/REGISTRY.json`.
 - It imports only `warden.models`, never writes, never counts. **VERIFIED** by `tests/test_independence.py`.
 
 271 tests are collected in this tree. With Ghost Tools and Warden on the import path, 271 pass on Warden `main` on CPython 3.13 (run 2026-10-12).
 
-Without Ghost Tools on the import path, the 6 tests in `tests/test_real_ghost.py` skip with the reason "the real Ghost scan needs ghost_buster on PYTHONPATH". Nothing else is skipped. Install Ghost Tools (`pip install "git+https://github.com/wking53214/ghost_tools.git@V1.9.1"`) to run them.
+Without Ghost Tools on the import path, the 6 tests in `tests/test_real_ghost.py` skip with the reason "the real Ghost scan needs ghost_buster on PYTHONPATH". Install Ghost Tools (`pip install "git+https://github.com/wking53214/ghost_tools.git@V1.9.1"`) to run them. The 5 full-gate tests in `tests/test_in_the_loop.py` and `tests/test_real_ghost.py` also need SWIZZLE and ASSAY checkouts beside this one (folder names matched without regard to case, or point `CIRCUIT_ROOT` at the folder that holds them) and the Judge importable; otherwise they skip and say so. Nothing else is skipped.
 
 ### Testing against the pin
 
@@ -117,8 +118,7 @@ The tests named above: against hand-built Ghost findings on scratch trees, and (
 
 ## WHAT IS NOT PROVEN
 
-- A run against a large real repository. The end-to-end tests use small scratch repositories.
-- The full chain with SWIZZLE, ASSAY and the Judge seated. The loop was run with Ghost, Warden and Drafter only.
+- A run against a large real repository. The end-to-end tests use small scratch repositories, and so does the recorded circuit run.
 - That the text-level definition check agrees with a real parser on every possible Python file. It is stricter than Python on purpose and refuses when unsure, and Warden's keep test and comment-out test remain the real gate. But it was written and tested by hand, not checked against a large body of real code.
 - Python's newer f-string rules (quotes reused inside braces) can confuse the small scanner. The likely result is a refusal, not a wrong edit, but this is not proven.
 
@@ -128,7 +128,7 @@ The tests named above: against hand-built Ghost findings on scratch trees, and (
 - Only Markdown files are rewritten for claims, and only `.py` files for dead code.
 - A document claim split across two lines is skipped, as is a claim that is not below Ghost's lower bound (no edit is made when the number is not an undercount).
 - Ghost does not report a decorated function as dead (it counts a decorator as a use), so the decorator handling is exercised by hand-built findings only.
-- Warden's protocol gives Drafter no way to tell the user why it stayed silent. The reasons are in `Drafter.last_skipped` but nothing prints them yet.
+- Drafter has no output of its own. The reasons it stayed silent reach a person only through Warden's `drafter_skipped` field (at most 20 lines, each cut to 200 characters).
 
 ## WHAT IS STILL UGLY
 
@@ -142,7 +142,7 @@ The tests named above: against hand-built Ghost findings on scratch trees, and (
 
 ## WHAT REMAINS OUTSTANDING
 
-More fixers, each added only for a Ghost detector whose finding has a safe mechanical answer. A live run seated in Warden's loop, recorded.
+More fixers, each added only for a Ghost detector whose finding has a safe mechanical answer. A recorded run on a real repository rather than a scratch one.
 
 ## CLAIMS VS REALITY
 

@@ -39,11 +39,16 @@ def many_tests(count: int = 40) -> str:
 
 
 def sibling(name: str) -> Path:
-    """A sibling checkout of the circuit (SWIZZLE, ASSAY), or skip. CIRCUIT_ROOT overrides the folder."""
+    """A sibling checkout of the circuit (SWIZZLE, ASSAY), or skip. CIRCUIT_ROOT overrides the folder.
+
+    The folder name is matched without regard to case (`swizzle`, `SWIZZLE`), the same rule
+    `warden tagteam --stack` uses, so a clone named either way is found.
+    """
     base = Path(os.environ.get("CIRCUIT_ROOT") or Path(__file__).resolve().parents[2])
-    if not (base / name).is_dir():
+    found = [p for p in base.iterdir() if p.is_dir() and p.name.lower() == name.lower()] if base.is_dir() else []
+    if len(found) != 1:
         pytest.skip(f"the full gate needs the {name} checkout beside this one (or set CIRCUIT_ROOT)")
-    return base / name
+    return found[0]
 
 
 def full_gate_kwargs() -> dict:
