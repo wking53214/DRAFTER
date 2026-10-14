@@ -42,7 +42,7 @@ class Drafter:
     requires_contract = "1"
 
     #: What each built-in fixer's proposal touches, known without reading any file.
-    SCOPES = {"doc_test_count_drift": "documentation", "dead_code": "code"}
+    SCOPES = {"doc_test_count_drift": "documentation", "dead_code": "code", "list_membership_in_loop": "code"}
 
     def __init__(self, fixers: Optional[dict[str, Fixer]] = None, scope: Optional[str] = None) -> None:
         self.fixers = dict(FIXERS if fixers is None else fixers)

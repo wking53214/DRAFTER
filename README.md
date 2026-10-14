@@ -34,6 +34,7 @@ Ghost finding  ->  Drafter.propose(target, findings, baseline)  ->  Transformati
 | `drafter.fixers` | the table from Ghost detector name to fixer |
 | `drafter.fixers.doc_test_count` | the answer to `doc_test_count_drift` (a stale "N tests passed" claim) |
 | `drafter.fixers.dead_code` | the answer to `dead_code` (a function or class nothing uses) |
+| `drafter.fixers.list_membership` | the answer to `list_membership_in_loop` (a module-level list scanned on every pass of a loop; its brackets become a set's) |
 | `drafter._safe` | path, file-reading and number checks every fixer shares |
 | `drafter._pyblock` | the plain-text check that a line range is exactly one definition |
 
@@ -49,6 +50,7 @@ Ghost finding  ->  Drafter.propose(target, findings, baseline)  ->  Transformati
 - **No writes.** Drafter never opens a file for writing. A test reads its own source to prove it.
 - **Conservative removal.** Ghost's "dead" means no syntax node names the function. Drafter also declines (and records why in `describe_skipped`) when Ghost's `dynamic_lookup_possible` is anything but `no`; when the name appears anywhere in the repository outside its own definition (a string, an attribute, an `__all__`, a `.pyi` stub, a config or docs file, an import or re-export, `TYPE_CHECKING`); when a file in the same package looks things up by a computed name or glues a piece of the name onto a quoted prefix or suffix; when the module is star-imported; when it carries any decorator (a call or attribute form is treated as registering); or when it has a dunder, protocol, abstract, property or overload role. A call inside `try/except` is not evidence of safety.
 - **Test-count claims.** Only the project's root README is rewritten, and only when the sentence reads as this project's own suite. Sub-package READMEs, other documents, "upstream has N tests", "added N tests", "before the fix, N tests failed", platform or version phrases, and a count followed by "failed", "skipped" or "errors" are declined.
+- **List to set, only when nothing can tell.** For `list_membership_in_loop`, Ghost names the container, says whether the literal is a list or a tuple, and gives the line it is defined on. The fixer reads the file's tokens (the standard library's tokenizer, which builds no syntax tree and decides nothing) and changes the literal's two brackets to braces, nothing else. It refuses unless the literal sits at column 0, is bound exactly once, holds only plain hashable literals (strings that are not f-strings, whole or decimal numbers, `None`, `True`, `False`), is used in the same file only in membership tests (`in`, `not in`; never iterated, indexed, measured, concatenated, called, rebound or exported), and is mentioned in no other file of the repository, not even in a string or a document.
 - **Scope.** Every proposal carries `scope_hint` (`"code"` or `"documentation"`), and `Drafter.scope_of(finding)` answers the same from the detector name alone, with no file reads. `Drafter(scope="documentation")` tries in-scope findings first and skips the rest. Warden sets `scope` from the human grant before the first call (Warden 0.11.0 or newer), so under a documentation grant the dead-code fixer is skipped with a reason instead of being proposed and declined.
 
 ## IMPORTANT BOUNDARIES
@@ -93,16 +95,17 @@ Warden calls `Drafter.propose` once per cycle and stops calling it when it retur
 - A root-level file reported as `tgt/m.py` is found. **VERIFIED** by `tests/test_paths.py` and by `tests/test_real_ghost.py`.
 - Odd input (a file that is not UTF-8, missing or wrong-typed fields, junk instead of findings, a bad target) gives no proposal and a reason, never a crash. **VERIFIED** by `tests/test_odd_input.py`.
 - With the real Ghost scan and the real Warden loop, a root-level module, a nested module, a three-folder-deep module and two README claims (one in the root, one in a subfolder) each produce a proposal that Warden applies cleanly, and the loop then converges. **VERIFIED** by `tests/test_real_ghost.py`.
+- A module-level list of ten strings tested with `in` inside a loop becomes a set, byte for byte otherwise (a tuple too; a multi-line literal with comments, CRLF and a BOM all kept); every other kind of element (an f-string, a name, a tuple, a hex number, implicit concatenation) and every other kind of use (iteration, indexing, `len`, concatenation, a method, a rebinding, a keyword argument, a mention in a string, another file or a document) is refused with a reason; an old Ghost that does not name the container gets no proposal; and through the whole gate the set stands and Ghost falls silent. **VERIFIED** by `tests/test_list_membership_fixer.py`.
 - Seated in the whole circuit (Ghost, SWIZZLE, ASSAY, Judge and Burnish all live, through `warden tagteam --stack`), a dead function is commented out under a `code` grant and skipped with a reason under a `documentation` grant; both runs end `ACCEPT`, exit 0. **VERIFIED** by hand on 2026-10-14 on a scratch repository; recorded in Warden's `docs/REGISTRY.json`.
 - It imports only `warden.models`, never writes, never counts. **VERIFIED** by `tests/test_independence.py`.
 
-271 tests are collected in this tree. With Ghost Tools and Warden on the import path, 271 pass on Warden `main` on CPython 3.13 (run 2026-10-12).
+304 tests are collected in this tree. With Ghost Tools and Warden on the import path, 304 pass on Warden `v0.11.0` on CPython 3.13 (run 2026-10-14).
 
-Without Ghost Tools on the import path, the 6 tests in `tests/test_real_ghost.py` skip with the reason "the real Ghost scan needs ghost_buster on PYTHONPATH". Install Ghost Tools (`pip install "git+https://github.com/wking53214/ghost_tools.git@V1.9.1"`) to run them. The 5 full-gate tests in `tests/test_in_the_loop.py` and `tests/test_real_ghost.py` also need SWIZZLE and ASSAY checkouts beside this one (folder names matched without regard to case, or point `CIRCUIT_ROOT` at the folder that holds them) and the Judge importable; otherwise they skip and say so. Nothing else is skipped.
+Without Ghost Tools on the import path, the 6 tests in `tests/test_real_ghost.py` and the 2 real-Ghost tests in `tests/test_list_membership_fixer.py` skip with the reason "the real Ghost scan needs ghost_buster on PYTHONPATH". Install Ghost Tools (`pip install "git+https://github.com/wking53214/ghost_tools.git@V1.9.1"`) to run them. The 5 full-gate tests in `tests/test_in_the_loop.py` and `tests/test_real_ghost.py` also need SWIZZLE and ASSAY checkouts beside this one (folder names matched without regard to case, or point `CIRCUIT_ROOT` at the folder that holds them) and the Judge importable; otherwise they skip and say so. Nothing else is skipped.
 
 ### Testing against the pin
 
-Drafter's tests import Warden from the import path. Against the pinned tag `v0.11.0`, all 271 pass on CPython 3.13 with Ghost Tools, SWIZZLE, ASSAY and the Judge beside this checkout (checked 2026-10-14). `v0.11.0` also sets the Drafter's `scope` from the grant; `v0.10.1` does not, and the tests pass against it too, since none depends on the handoff. `v0.10.1` and `v0.11.0` both carry the held-result rule that `tests/test_real_ghost.py::test_an_unverified_run_puts_the_applied_edit_back` expects; `v0.9.0` does not, so that test fails on the old pin.
+Drafter's tests import Warden from the import path. Against the pinned tag `v0.11.0`, all 304 pass on CPython 3.13 with Ghost Tools, SWIZZLE, ASSAY and the Judge beside this checkout (checked 2026-10-14). `v0.11.0` also sets the Drafter's `scope` from the grant; `v0.10.1` does not, and the tests pass against it too, since none depends on the handoff. `v0.10.1` and `v0.11.0` both carry the held-result rule that `tests/test_real_ghost.py::test_an_unverified_run_puts_the_applied_edit_back` expects; `v0.9.0` does not, so that test fails on the old pin.
 
 ## WHAT IS BEAUTIFUL
 
@@ -110,7 +113,7 @@ The fixer's refusals. Every unsafe case returns nothing, so the worst Drafter ca
 
 ## WHAT IS IMPLEMENTED
 
-Two fixers: `doc_test_count_drift` and `dead_code`.
+Three fixers: `doc_test_count_drift`, `dead_code` and `list_membership_in_loop`.
 
 ## WHAT IS PROVEN
 
@@ -124,8 +127,9 @@ The tests named above: against hand-built Ghost findings on scratch trees, and (
 
 ## WHAT DOES NOT WORK
 
-- Only two kinds of finding can be fixed. Every other Ghost detector is ignored.
-- Only Markdown files are rewritten for claims, and only `.py` files for dead code.
+- Only three kinds of finding can be fixed. Every other Ghost detector is ignored.
+- Only Markdown files are rewritten for claims, and only `.py` files for dead code and list membership.
+- The list fixer needs a Ghost that reports `name`, `container` and `defined_at` on the finding (ghost_tools after 1.9.1). An older Ghost's finding gets no proposal and a reason.
 - A document claim split across two lines is skipped, as is a claim that is not below Ghost's lower bound (no edit is made when the number is not an undercount).
 - Ghost does not report a decorated function as dead (it counts a decorator as a use), so the decorator handling is exercised by hand-built findings only.
 - Drafter has no output of its own. The reasons it stayed silent reach a person only through Warden's `drafter_skipped` field (at most 20 lines, each cut to 200 characters).
