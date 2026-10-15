@@ -43,7 +43,8 @@ import tokenize
 from pathlib import Path
 from typing import Optional
 
-from warden.models import Defect, FileEdit
+from cns.defect import Defect
+from cns.seat import FileEdit
 
 from .._reach import _files
 from .._safe import (Reason, attributes_of, check_editable, read_source, refuse,

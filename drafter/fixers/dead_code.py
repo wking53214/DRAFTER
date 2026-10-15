@@ -16,7 +16,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from warden.models import Defect, FileEdit
+from cns.defect import Defect
+from cns.seat import FileEdit
 
 from .._pyblock import find_block
 from .._reach import check_decorators, check_unreachable

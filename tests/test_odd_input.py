@@ -1,7 +1,7 @@
 """Safe or silent: odd input gives no proposal and a recorded reason, never a crash."""
 
 import pytest
-from warden.models import Defect, DefectSeverity
+from cns.defect import Defect, DefectSeverity
 
 from drafter import Drafter
 from support import dead_finding, doc_finding, propose
