@@ -6,7 +6,9 @@ import inspect
 from pathlib import Path
 from typing import Any, Callable, Mapping, Optional, Sequence
 
-from warden.models import Defect, FileEdit, Transformation, TransformationStatus, defects_from_ghost
+from cns.defect import Defect
+from cns.seat import FileEdit
+from warden.models import Transformation, TransformationStatus, defects_from_ghost
 
 from ._safe import finding_id
 from .fixers import FIXERS

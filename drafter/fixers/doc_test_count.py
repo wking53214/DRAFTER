@@ -19,7 +19,8 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from warden.models import Defect, FileEdit
+from cns.defect import Defect
+from cns.seat import FileEdit
 
 from .._safe import (Reason, attributes_of, check_editable, read_source, refuse,
                      resolve_in_target, run_fixer, split_lines, warden_view, whole_int)
