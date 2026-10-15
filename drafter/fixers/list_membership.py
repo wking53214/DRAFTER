@@ -92,10 +92,16 @@ def _fix(target: Path, defect: Defect) -> FileEdit:
 
 def _tokens(body: str) -> list[tokenize.TokenInfo]:
     try:
-        return list(tokenize.generate_tokens(io.StringIO(body).readline))
+        tokens = list(tokenize.generate_tokens(io.StringIO(body).readline))
     except (tokenize.TokenError, SyntaxError, IndentationError) as err:
         refuse(f"the file could not be tokenized ({type(err).__name__}), so it is left alone")
-    raise AssertionError  # unreachable
+    # Python 3.11 and earlier do not raise on an unclosed string: they emit an ERRORTOKEN and go on.
+    # The fixer must not trust tokens from a file the tokenizer could not read, on any version.
+    for tok in tokens:
+        if tok.type == tokenize.ERRORTOKEN and tok.string.strip():
+            refuse(f"the file could not be tokenized (invalid token {tok.string!r} at line {tok.start[0]}), "
+                   "so it is left alone")
+    return tokens
 
 
 def _significant(tok: tokenize.TokenInfo) -> bool:
