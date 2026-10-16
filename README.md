@@ -60,7 +60,7 @@ Drafter imports `warden.models` and nothing else from the stack. It does not imp
 ## Install
 
 ```bash
-pip install "git+https://github.com/wking53214/Warden.git@v0.11.4"
+pip install "git+https://github.com/wking53214/Warden.git@df16da8698e6c38906c6573eedefda3dcae780a4"
 pip install git+https://github.com/wking53214/Drafter.git
 ```
 
