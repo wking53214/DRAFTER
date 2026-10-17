@@ -4,6 +4,21 @@ All notable changes to Drafter. The format follows [Keep a Changelog](https://ke
 and the version follows [Semantic Versioning](https://semver.org/). No release has been tagged yet; the
 versions below are the ones `pyproject.toml` declared.
 
+## [0.2.1] - 2026-10-17
+
+### Changed
+
+- Warden is re-pinned from `2cf0eec` (0.12.0 line) to the full commit `ec551d8e10f82b6e3e681593a97011ae517d360b`
+  (Warden 0.13.1). That Warden pins CNS by the same commit Drafter does, so `pip install -e ".[dev]"` resolves
+  cleanly in a fresh environment and `pip check` is clean, with no `--no-deps` step.
+- The `integration` job's sibling checkouts moved to the fixed siblings: ghost_tools `288cefa` (1.10.0), JUDGE
+  `97904c2` (0.4.0), SWIZZLE `04b72b1` (0.8.0), ASSAY `5aafbf3` (0.11.0). Each carries a bump comment.
+
+### Added
+
+- Tests that the comment beside the Warden pin names the installed Warden release, and that Drafter's CNS pin is
+  the same commit as the CNS pin Warden requires.
+
 ## [0.2.0] - 2026-10-17
 
 ### Added

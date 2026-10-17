@@ -8,7 +8,7 @@ The in-loop maker. It reads what Ghost Tools found and proposes one fix at a tim
 
 One of seven repositories in a stack that improves code under human control. Drafter has one job: given a Ghost Tools finding, return the change that would close it, as data. [Warden](https://github.com/wking53214/Warden) runs the loop around it. Warden asks Drafter for a change, checks a person granted it, runs the target's tests, applies the change, runs the tests again, and has Ghost look again. Drafter is then asked again, until it has nothing left to propose.
 
-Version `0.2.0`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Both are pinned to full commits in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
+Version `0.2.1`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Both are pinned to full commits in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
 
 ## WHAT IT DOES NOT OWN
 
@@ -72,8 +72,9 @@ break it without anyone noticing. To move to a newer one:
 
 1. Pick the full 40-character commit you want, and note the tag it corresponds to.
 2. Put it after the `@` in the matching line of `pyproject.toml`, with the tag in a trailing comment.
-3. Run `pip install -e ".[dev]"` and `pytest`. The tests check that the Warden pin is a tag or a full commit, that
-   the CNS pin is a full commit, and that this package's `requires_contract` matches the installed Warden's `CONTRACT`.
+3. Run `pip install -e ".[dev]"`, `pip check` and `pytest`. The tests check that the Warden pin is a tag or a full
+   commit, that its comment names the installed release, that the CNS pin is a full commit and the same one Warden
+   requires, and that this package's `requires_contract` matches the installed Warden's `CONTRACT`.
 4. Open a pull request. CI runs the same checks, and the `integration` job runs the whole suite against the circuit.
 
 The `integration` job also pins its four sibling checkouts (ghost_tools, JUDGE, SWIZZLE, ASSAY) to full commits;
@@ -181,7 +182,7 @@ The README says Drafter never writes and never measures. The tests read its sour
 
 ## Status
 
-Experimental, version 0.2.0, maintained by one person. Changes are listed in `CHANGELOG.md`. No release has been tagged yet.
+Experimental, version 0.2.1, maintained by one person. Changes are listed in `CHANGELOG.md`. No release has been tagged yet.
 
 ## Support
 

@@ -19,3 +19,26 @@ def _warden_dependency() -> re.Match:
 def test_warden_is_pinned_to_a_tag_or_a_full_commit():
     ref = _warden_dependency().group("ref")
     assert PINNED.match(ref), f"Warden is pinned to {ref!r}; use a vX.Y.Z tag or a full 40-character commit"
+
+
+def _pin_comment() -> str:
+    line = next(ln for ln in PYPROJECT.read_text(encoding="utf-8").splitlines() if ln.lstrip().startswith('"warden @ '))
+    return line.split("#", 1)[1] if "#" in line else ""
+
+
+def test_the_pin_comment_names_the_installed_warden_release():
+    """The comment beside the pin says which Warden release the commit is. It must agree with what got installed."""
+    from importlib import metadata
+
+    installed = metadata.version("warden")
+    assert f"Warden {installed}" in _pin_comment(), f"pin comment {_pin_comment()!r} vs installed {installed}"
+
+
+def test_cns_is_pinned_to_the_same_commit_as_wardens_own_cns_pin():
+    """Warden pins CNS by commit. Two different CNS commits cannot both be installed, so they must be one."""
+    from importlib import metadata
+
+    drafter_deps = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))["project"]["dependencies"]
+    (mine,) = [d for d in drafter_deps if d.startswith("cns @ ")]
+    theirs = [r.split(";")[0].strip() for r in (metadata.requires("warden") or []) if r.startswith("cns @ ")]
+    assert theirs == [mine.split("#")[0].strip()], f"Warden requires {theirs}, Drafter pins {mine}"

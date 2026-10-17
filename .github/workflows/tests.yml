@@ -60,25 +60,25 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: wking53214/ghost_tools
-          ref: dd1b8039a9b32fe41cfa2823228ab3a03c394d0f  # untagged commit, package version 1.10.0
+          ref: 288cefa7608cace8be0f91cabcc305930466d84b  # untagged commit, package version 1.10.0 (bumped from dd1b803)
           path: circuit/ghost_tools
           token: ${{ secrets.CIRCUIT_TOKEN || github.token }}
       - uses: actions/checkout@v4
         with:
           repository: wking53214/JUDGE
-          ref: 86c55b55153434979193e2565b1efd795b10d781  # untagged commit, package version 0.4.0
+          ref: 97904c2a2d85cabc89a5fccfa4497ee650ce9554  # untagged commit, package version 0.4.0 (bumped from 86c55b5)
           path: circuit/JUDGE
           token: ${{ secrets.CIRCUIT_TOKEN || github.token }}
       - uses: actions/checkout@v4
         with:
           repository: wking53214/SWIZZLE
-          ref: 9eb2a10ed1a05f3d15041c68f08b9c1c8c8c036f  # untagged commit, package version 0.8.0
+          ref: 04b72b197b703e7e64be62039509c1c9e6c3bf20  # untagged commit, package version 0.8.0 (bumped from 9eb2a10)
           path: circuit/SWIZZLE
           token: ${{ secrets.CIRCUIT_TOKEN || github.token }}
       - uses: actions/checkout@v4
         with:
           repository: wking53214/ASSAY
-          ref: 4da3919f19a04cb59b45c6d07d55229c923e5126  # untagged commit
+          ref: 5aafbf3b45c68d0948574ff4364cde614890839e  # untagged commit, package version 0.11.0 (bumped from 4da3919)
           path: circuit/ASSAY
           token: ${{ secrets.CIRCUIT_TOKEN || github.token }}
       - uses: actions/setup-python@v5

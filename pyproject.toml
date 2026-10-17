@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "drafter"
-version = "0.2.0"
+version = "0.2.1"
 description = "The in-loop maker: turns Ghost Tools findings into proposed fixes. Proposes, never writes."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -26,7 +26,7 @@ classifiers = [
 # seat. The tag a commit corresponds to is named in a comment beside it where there is one.
 # To bump: see "Bumping the pins" in README.md.
 dependencies = [
-    "warden @ git+https://github.com/wking53214/Warden.git@2cf0eeccf839f88d624deb133fe1cb4b16a99009",
+    "warden @ git+https://github.com/wking53214/Warden.git@ec551d8e10f82b6e3e681593a97011ae517d360b",  # untagged commit, Warden 0.13.1
     "cns @ git+https://github.com/wking53214/CNS.git@5252ceebe98185f7be81212d988055ccf9884568",  # v1.8.0
 ]
 
