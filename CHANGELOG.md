@@ -1,8 +1,31 @@
 # Changelog
 
 All notable changes to Drafter. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and the version follows [Semantic Versioning](https://semver.org/). No release has been tagged yet; the
-versions below are the ones `pyproject.toml` declared.
+and the version follows [Semantic Versioning](https://semver.org/). An older tag, `v0.10.0`, exists in this
+repository from earlier numbering (it points at a commit whose `pyproject.toml` says 0.1.0) and does not correspond
+to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
+below are the ones `pyproject.toml` declared.
+
+## [0.2.2] - 2026-10-17
+
+### Fixed
+
+- The `integration` job pinned JUDGE to `97904c2` (0.4.0) while its comment and the tested set say 0.4.1. It now
+  checks out the tested set exactly: ghost_tools `288cefa` (1.10.0), JUDGE `9d8f70e` (0.4.1), SWIZZLE `04b72b1`
+  (0.8.0), ASSAY `5aafbf3` (0.11.0). The comments beside the pins state only what was checked (the package
+  version, and that the commit is a tested-set pin).
+- The README install line installed `main` (0.1.0, which has no command line). It now installs a pinned commit of
+  this branch and says to point at a release once one is tagged.
+- The README and this file said no tag existed. A `v0.10.0` tag does exist (an earlier numbering, on a 0.1.0
+  commit); both now say so and that tagging this version is the owner's decision. No tag was created or moved.
+
+### Changed
+
+- Every GitHub Action in the workflow is pinned to a full commit with its tag in a comment: `actions/checkout`
+  v4.2.2 and `actions/setup-python` v5.6.0.
+- `tests/test_release.py`: the check that the README restates no full commit now ignores the one install line,
+  which is itself checked to be a full-commit pin of this repository. A new test requires every `uses:` in the
+  workflow to be a full-commit pin.
 
 ## [0.2.1] - 2026-10-17
 

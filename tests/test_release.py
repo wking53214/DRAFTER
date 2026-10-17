@@ -11,6 +11,7 @@ REPO = Path(drafter.__file__).resolve().parent.parent
 PYPROJECT = tomllib.loads((REPO / "pyproject.toml").read_text(encoding="utf-8"))
 README = (REPO / "README.md").read_text(encoding="utf-8")
 CHANGELOG = (REPO / "CHANGELOG.md").read_text(encoding="utf-8")
+INSTALL_LINE = r"^pip install git\+https://github\.com/wking53214/Drafter\.git@[0-9a-f]{40}$"
 WORKFLOW = (REPO / ".github" / "workflows" / "tests.yml").read_text(encoding="utf-8")
 
 
@@ -47,7 +48,9 @@ def test_the_readme_hard_codes_no_test_totals():
 
 def test_the_readme_does_not_restate_the_pinned_versions():
     """The pin lives in pyproject.toml. A tag or version restated in prose is wrong the day the pin moves."""
-    assert not re.search(r"[0-9a-f]{40}", README), "the README restates a full commit; refer to pyproject.toml"
+    # The one install line may name this repository's own commit; nothing else may.
+    prose = re.sub(INSTALL_LINE, "", README, flags=re.MULTILINE)
+    assert not re.search(r"[0-9a-f]{40}", prose), "the README restates a full commit; refer to pyproject.toml"
     assert "pinned to Warden tag" not in README and "v0.11" not in README and "0.11.5" not in README
     pyproject_text = (REPO / "pyproject.toml").read_text(encoding="utf-8")
     assert "0.11.5" not in pyproject_text, "the pin comment names a version the pin is not"
@@ -62,3 +65,16 @@ def test_the_cns_dependency_is_pinned_to_a_full_commit():
 def test_the_workflow_sibling_checkouts_are_pinned_to_full_commits():
     refs = re.findall(r"^\s+ref: (\S+)", WORKFLOW, re.MULTILINE)
     assert refs and all(re.fullmatch(r"[0-9a-f]{40}", r) for r in refs), refs
+
+
+def test_the_readme_install_line_is_a_full_commit_pin_of_this_repository():
+    """A bare `...Drafter.git` installs `main`, which is an older line than this package."""
+    assert re.search(INSTALL_LINE, README, re.MULTILINE), "pin the README install line to a full commit"
+
+
+def test_every_workflow_action_is_pinned_to_a_full_commit_with_its_tag():
+    uses = re.findall(r"^\s+- uses: (\S+)(.*)$", WORKFLOW, re.MULTILINE)
+    assert uses
+    for action, comment in uses:
+        assert re.fullmatch(r"[\w.-]+/[\w.-]+@[0-9a-f]{40}", action), f"pin {action} to a full commit"
+        assert re.search(r"#\s*v\d+\.\d+\.\d+", comment), f"name the tag beside {action}"
