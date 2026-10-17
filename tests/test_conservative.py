@@ -42,7 +42,8 @@ ORPHAN = "def orphan():\n    return 1\n"
 
 
 def test_baseline_a_truly_dead_function_is_still_proposed(tmp_path):
-    root = _repo(tmp_path, {"m.py": ORPHAN + "\n\ndef used():\n    return 2\n", "n.py": "from m import used\n\nused()\n"})
+    root = _repo(tmp_path, {"m.py": ORPHAN + "\n\ndef used():\n    return 2\n",
+                            "n.py": "from m import used\n\nused()\n"})
     proposal, _ = _dead(root, "m.py")
     assert proposal is not None and proposal.edits[0].old == ORPHAN
 
@@ -81,7 +82,8 @@ def test_a_star_import_of_the_module_is_declined(tmp_path):
 
 def test_type_checking_only_use_is_declined(tmp_path):
     files = {"m.py": "class Orphan:\n    x = 1\n",
-             "n.py": "from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from m import Orphan\n\n\ndef f(o: 'Orphan'):\n    return o\n"}
+             "n.py": ("from typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    from m import Orphan\n\n\n"
+                      "def f(o: 'Orphan'):\n    return o\n")}
     assert _declined(tmp_path, files, name="Orphan", kind="class")
 
 
@@ -129,7 +131,9 @@ def test_dunder_protocol_abstract_and_property_roles_are_declined(tmp_path):
 
 
 def test_a_call_inside_try_except_is_not_treated_as_safe(tmp_path):
-    files = {"m.py": ORPHAN, "n.py": "def go():\n    try:\n        from m import orphan\n        orphan()\n    except Exception:\n        pass\n"}
+    files = {"m.py": ORPHAN,
+             "n.py": ("def go():\n    try:\n        from m import orphan\n        orphan()\n"
+                      "    except Exception:\n        pass\n")}
     assert _declined(tmp_path, files)
 
 

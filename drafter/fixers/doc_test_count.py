@@ -203,7 +203,8 @@ def _matching_paren(line: str, open_at: int) -> int:
 # --- the edit itself ------------------------------------------------------
 
 def _rewrite(line: str, documented: int, lower: int) -> str:
-    marker_end = len(_MARKER.match(line).group(0))
+    lead = _MARKER.match(line)                  # every part of the pattern is optional, so it always matches
+    marker_end = len(lead.group(0)) if lead else 0
     first_problem: Optional[str] = None
     for m in _CLAIM.finditer(line):
         if m.group("num") != str(documented):
@@ -222,14 +223,14 @@ def _rewrite(line: str, documented: int, lower: int) -> str:
             claim = "The suite holds " + claim
         return line[:s] + claim + line[e:]
     refuse(first_problem or f"no '{documented} tests' claim found on that line")
-    raise AssertionError  # unreachable
 
 
 #: Words before the number that mean the sentence is about some other suite or a past event.
 _ELSEWHERE_BEFORE = re.compile(
     r"\b(?:upstream|downstream|vendored|fork|forked|dependency|dependencies|their|its|other|another|"
     r"add|adds|added|adding|new|write|wrote|written|before|after|previously|formerly|was|were|had|"
-    r"fix|fixes|fixed|fixing|broke|broken|from|python|py|pytest|node|ruby|go|rust|java|version|linux|windows|macos|ubuntu|darwin)\b",
+    r"fix|fixes|fixed|fixing|broke|broken|from|python|py|pytest|node|ruby|go|rust|java|version|linux|windows|macos|"
+    r"ubuntu|darwin)\b",
     re.IGNORECASE)
 #: What after the number means the claim is one half of a result line, or about a platform.
 _ELSEWHERE_AFTER = re.compile(
@@ -247,11 +248,12 @@ def _about_something_else(line: str, s: int, e: int) -> Optional[str]:
         start = m.end()
     before = line[start:s]
     if _ELSEWHERE_BEFORE.search(before):
-        return "the sentence looks like it is about another suite, a version, or a past change, not this project's own count"
+        return ("the sentence looks like it is about another suite, a version, or a past change, "
+                "not this project's own count")
     end = len(line)
-    m = _SENTENCE_BREAK.search(line, e)
-    if m:
-        end = m.start()
+    stop = _SENTENCE_BREAK.search(line, e)
+    if stop:
+        end = stop.start()
     after = line[e:end]
     if _ELSEWHERE_AFTER.search(after):
         return "the claim sits beside other counts or a platform, so rewriting it could change what the sentence says"

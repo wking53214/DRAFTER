@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+import logging
 from pathlib import Path
 from typing import Any, Callable, Mapping, Optional, Sequence
 
@@ -10,8 +11,10 @@ from cns.defect import Defect
 from cns.seat import FileEdit
 from warden.models import Transformation, TransformationStatus, defects_from_ghost
 
-from ._safe import finding_id
+from ._safe import brief, finding_id, internal_error_reason
 from .fixers import FIXERS
+
+log = logging.getLogger(__name__)
 
 #: A fixer takes the target and one finding and returns the edit that closes it,
 #: or None when it cannot do so safely. It never writes. A fixer may take a third
@@ -27,8 +30,12 @@ class Drafter:
     which is how the Drafter says it has nothing left. That is not a claim that
     the tree is clean; Ghost may still report findings no fixer here handles.
 
-    Safe or silent: odd input (a file that is not UTF-8, a missing field, a
-    finding that is not a finding) never raises. It produces no proposal.
+    Safe, and never silent about a surprise: odd input (a file that is not
+    UTF-8, a missing field, a finding that is not a finding) never raises. It
+    produces no proposal and a reason. A reason that begins "internal error"
+    means something other than a deliberate refusal went wrong (a bug in the
+    Drafter, in a custom fixer, or in the Warden it runs with); the same event
+    is logged at WARNING on the `drafter` logger, with its traceback at DEBUG.
 
     The Drafter keeps no memory between calls, so the same input always gives
     the same answer.
@@ -36,8 +43,8 @@ class Drafter:
     `last_skipped` lists, for the latest `propose` call, every finding the
     Drafter recognised but would not (or could not) act on, as
     `(finding id, reason)`. A finding of a kind it has no fixer for is not
-    listed; it was never its business. Warden's Drafter protocol has no channel
-    for notes, so nothing prints this today; a caller can read it after the run.
+    listed; it was never its business. Warden reads `describe_skipped()` after
+    every call and prints it as `drafter_skipped`; `drafter propose` prints it too.
     """
 
     #: The seat contract this Drafter was written against. Warden warns when it is missing and refuses a mismatch.
@@ -119,22 +126,36 @@ class Drafter:
             return item
         if isinstance(item, Mapping):          # a raw Ghost finding
             try:
-                return defects_from_ghost([item])[0]
-            except Exception:  # noqa: BLE001 - safe or silent
-                self._skip("?", "a finding could not be read")
+                defect: Defect = defects_from_ghost([item])[0]
+                return defect
+            except (AttributeError, IndexError, KeyError, TypeError, ValueError) as err:
+                # The shapes a malformed finding can take: a field of the wrong type, a missing mapping.
+                log.warning("a finding could not be read (%s: %s)", type(err).__name__, brief(err))
+                self._skip("?", f"a finding could not be read ({type(err).__name__}: {brief(err)})")
+                return None
+            except Exception as err:  # noqa: BLE001 - boundary: a hostile mapping may raise anything
+                self._internal("?", "reading a finding", err)
                 return None
         self._skip("?", f"an item that is not a finding ({type(item).__name__}) was ignored")
         return None
 
     def _call(self, fixer: Fixer, root: Path, defect: Defect, fid: str) -> Optional[FileEdit]:
-        sink = lambda reason: self._skip(fid, reason)  # noqa: E731
+        def sink(reason: str) -> None:
+            self._skip(fid, reason)
+
         try:
             if _takes_reason(fixer):
                 return fixer(root, defect, sink)
             return fixer(root, defect)
-        except Exception as err:  # noqa: BLE001 - safe or silent
-            self._skip(fid, f"the fixer failed with {type(err).__name__}")
+        except Exception as err:  # noqa: BLE001 - boundary: a fixer is pluggable code, and may fail in any way
+            self._internal(fid, "a fixer", err)
             return None
+
+    def _internal(self, fid: str, where: str, err: BaseException) -> None:
+        """Record a surprise: the reason for Warden, a WARNING for the log, the traceback at DEBUG."""
+        log.warning("unexpected %s in %s for finding %s: %s", type(err).__name__, where, fid, brief(err))
+        log.debug("traceback for the unexpected error in %s", where, exc_info=True)
+        self._skip(fid, internal_error_reason(err))
 
     def _wrap(self, root: Path, defect: Defect, edit: FileEdit, baseline: str, fid: str) -> Optional[Transformation]:
         try:
@@ -158,8 +179,11 @@ class Drafter:
             )
             proposal.scope_hint = proposal.transformation_scope     # a cheap read for the caller
             return proposal
-        except Exception as err:  # noqa: BLE001 - safe or silent
-            self._skip(fid, f"the proposal could not be built ({type(err).__name__})")
+        except (AttributeError, TypeError, ValueError) as err:
+            # Building the proposal touches only Warden's data shapes. A failure here is a mismatch between
+            # this Drafter and the Warden it runs with (a renamed field, a new required one), never the
+            # user's input, so it is reported as an internal error. Anything else propagates.
+            self._internal(fid, "building the proposal", err)
             return None
 
 

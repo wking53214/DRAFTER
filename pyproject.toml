@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "drafter"
-version = "0.1.0"
+version = "0.2.0"
 description = "The in-loop maker: turns Ghost Tools findings into proposed fixes. Proposes, never writes."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -19,21 +19,48 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Quality Assurance",
 ]
-# Pinned to a full Warden commit (0.11.5), not a branch, so a change on Warden main cannot silently break this seat.
-# To bump: see "Bumping the Warden pin" in README.md.
-dependencies = ["warden @ git+https://github.com/wking53214/Warden.git@2cf0eeccf839f88d624deb133fe1cb4b16a99009",
-                "cns @ git+https://github.com/wking53214/CNS.git@v1.8.0"]
+# Both are pinned to a full commit, not a branch or a moving tag, so a change upstream cannot silently break this
+# seat. The tag a commit corresponds to is named in a comment beside it where there is one.
+# To bump: see "Bumping the pins" in README.md.
+dependencies = [
+    "warden @ git+https://github.com/wking53214/Warden.git@2cf0eeccf839f88d624deb133fe1cb4b16a99009",
+    "cns @ git+https://github.com/wking53214/CNS.git@5252ceebe98185f7be81212d988055ccf9884568",  # v1.8.0
+]
 
 [project.urls]
 Homepage = "https://github.com/wking53214/Drafter"
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11"]
+
+[project.scripts]
+drafter = "drafter.cli:main"
 
 [tool.setuptools]
 packages = ["drafter", "drafter.fixers"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+# E/W pycodestyle, F pyflakes, B bugbear, BLE blind-except. RUF100 fails a `noqa` that suppresses nothing,
+# so every `# noqa: BLE001` left in the code marks a broad catch that is really there, at a documented boundary.
+select = ["E", "F", "W", "B", "BLE", "RUF100"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["drafter"]
+strict = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+# Warden ships no py.typed marker, so mypy cannot read its types. Its data shapes are used as opaque values here.
+module = ["warden", "warden.*"]
+ignore_missing_imports = true

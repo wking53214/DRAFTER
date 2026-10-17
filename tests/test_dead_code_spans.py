@@ -13,7 +13,8 @@ from support import BOM, dead_finding, propose
 def _write(tmp_path, text, newline=None):
     root = tmp_path / "tgt"
     root.mkdir(parents=True)
-    (root / "m.py").write_bytes(text.encode("utf-8") if newline is None else text.replace("\n", newline).encode("utf-8"))
+    shaped = text if newline is None else text.replace("\n", newline)
+    (root / "m.py").write_bytes(shaped.encode("utf-8"))
     return root
 
 
@@ -163,4 +164,7 @@ def test_the_same_input_gives_the_same_proposal(tmp_path):
     finding = dead_finding(start=5, end=6)
     first, _ = propose(root, finding)
     second, _ = propose(root, finding)
-    assert [(e.path, e.kind, e.old, e.new) for e in first.edits] == [(e.path, e.kind, e.old, e.new) for e in second.edits]
+    def shape(proposal):
+        return [(e.path, e.kind, e.old, e.new) for e in proposal.edits]
+
+    assert shape(first) == shape(second)

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import os
 import re
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Iterator, Sequence
 
 from ._safe import refuse
@@ -125,7 +125,7 @@ def _dynamic_in(text: str) -> bool:
     return False
 
 
-def check_unreachable(root: Path, rel: Path, name: str, own_first: int, own_last: int) -> None:
+def check_unreachable(root: Path, rel: PurePath, name: str, own_first: int, own_last: int) -> None:
     """Refuse if anything in the repository could reach `name` other than its own definition."""
     word = re.compile(r"(?<![A-Za-z0-9_])%s(?![A-Za-z0-9_])" % re.escape(name))
     own = (root / rel).resolve()

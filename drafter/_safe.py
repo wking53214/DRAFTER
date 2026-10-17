@@ -1,7 +1,8 @@
 """Small, careful helpers shared by the fixers.
 
-The Drafter's promise is "safe or silent": whatever it is handed, it either
-proposes a change it can justify or proposes nothing and says why. Every helper
+The Drafter's promise: whatever it is handed, it either proposes a change it
+can justify or proposes nothing and says why (and a surprise says so loudly, see
+`run_fixer`). Every helper
 here either returns a clean value or raises `Refuse` with a plain-language
 reason, and the fixers turn a `Refuse` into "no proposal, reason recorded".
 
@@ -11,9 +12,12 @@ decodes strictly, so a file that is not valid UTF-8 is a refusal, not a crash.
 
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path, PurePath
-from typing import Any, Callable, Mapping, Optional
+from typing import Any, Callable, Mapping, NoReturn, Optional, TypeVar
+
+log = logging.getLogger(__name__)
 
 #: Reads nothing larger than this. A source or document bigger than 5 MB is not
 #: something to rewrite by hand-rolled text scanning.
@@ -31,13 +35,14 @@ BLOCKED_FILES = frozenset({
 })
 
 Reason = Callable[[str], None]
+_T = TypeVar("_T")
 
 
 class Refuse(Exception):
     """The Drafter will not propose a change, and this is why."""
 
 
-def refuse(reason: str) -> None:
+def refuse(reason: str) -> NoReturn:
     raise Refuse(reason)
 
 
@@ -50,7 +55,6 @@ def whole_int(value: Any, what: str) -> int:
     if isinstance(value, str) and re.fullmatch(r"[0-9]{1,9}", value):
         return int(value)
     refuse(f"{what} is not a whole number written with ASCII digits ({_shown(value)})")
-    raise AssertionError  # unreachable; keeps type checkers calm
 
 
 def attributes_of(defect: Any) -> Mapping[str, Any]:
@@ -63,8 +67,25 @@ def attributes_of(defect: Any) -> Mapping[str, Any]:
 def finding_id(defect: Any) -> str:
     try:
         return str(getattr(defect, "identity", "") or "?")[:120]
-    except Exception:  # noqa: BLE001 - an odd object must not stop the loop
+    except Exception as err:  # boundary: a hostile object's own code may raise anything
+        log.warning("could not read a finding's identity (%s: %s); using '?'", type(err).__name__, brief(err))
+        log.debug("traceback for the unreadable finding identity", exc_info=True)
         return "?"
+
+
+def brief(err: BaseException, limit: int = 100) -> str:
+    """The exception's message on one line, cut short, for a reason string or a log line."""
+    text = " ".join(str(err).split())
+    return text if len(text) <= limit else text[:limit - 3] + "..."
+
+
+def internal_error_reason(err: BaseException) -> str:
+    """The reason recorded when something other than a deliberate refusal went wrong.
+
+    It names the exception type and message so a person reading Warden's `drafter_skipped` can tell a
+    real bug in the Drafter (or in what it was handed) from an ordinary refusal.
+    """
+    return f"internal error ({type(err).__name__}: {brief(err)}); finding left alone"
 
 
 def _shown(value: Any) -> str:
@@ -126,7 +147,6 @@ def resolve_in_target(target: Path, file: Any) -> tuple[Path, PurePath]:
         raise
     except (OSError, ValueError) as err:
         refuse(f"the path could not be used ({type(err).__name__})")
-    raise AssertionError  # unreachable
 
 
 def _symlink_on_the_way(root: Path, rel: Path) -> bool:
@@ -179,14 +199,23 @@ def warden_view(text: str) -> str:
     return text.replace("\r\n", "\n") if crlf else text
 
 
-def run_fixer(inner: Callable[[], Any], why: Optional[Reason]) -> Any:
-    """Run a fixer body. A refusal (or any surprise) becomes None plus a recorded reason."""
+def run_fixer(inner: Callable[[], _T], why: Optional[Reason]) -> Optional[_T]:
+    """Run a fixer body. A refusal becomes None plus its reason; a surprise becomes None plus a loud one.
+
+    This is the documented boundary where a broad catch is kept: a fixer reads files and text it did not
+    write, and the loop must not die on one odd finding. But a surprise is not a refusal. It is logged at
+    WARNING (traceback at DEBUG) and its reason names the exception, so a real bug cannot pass for a quiet
+    "no safe fix".
+    """
     try:
         return inner()
     except Refuse as err:
         reason = str(err)
-    except Exception as err:  # noqa: BLE001 - safe or silent: odd input must never crash the loop
-        reason = f"unexpected {type(err).__name__} while checking the finding; left alone"
+        log.debug("refused: %s", reason)
+    except Exception as err:  # boundary: odd input must never crash the loop, but it is reported
+        reason = internal_error_reason(err)
+        log.warning("unexpected %s inside a fixer: %s", type(err).__name__, brief(err))
+        log.debug("traceback for the unexpected fixer error", exc_info=True)
     if why is not None:
         why(reason)
     return None

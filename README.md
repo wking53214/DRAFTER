@@ -8,7 +8,7 @@ The in-loop maker. It reads what Ghost Tools found and proposes one fix at a tim
 
 One of seven repositories in a stack that improves code under human control. Drafter has one job: given a Ghost Tools finding, return the change that would close it, as data. [Warden](https://github.com/wking53214/Warden) runs the loop around it. Warden asks Drafter for a change, checks a person granted it, runs the target's tests, applies the change, runs the tests again, and has Ghost look again. Drafter is then asked again, until it has nothing left to propose.
 
-Version `0.1.0`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal, and on nothing else. It is pinned to Warden tag `v0.11.0`; see "Testing against the pin" below.
+Version `0.2.0`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Both are pinned to full commits in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
 
 ## WHAT IT DOES NOT OWN
 
@@ -42,7 +42,7 @@ Ghost finding  ->  Drafter.propose(target, findings, baseline)  ->  Transformati
 
 - **One intentional change per proposal.** Several findings mean several turns of the loop.
 - **Ghost's facts, not Drafter's.** A fixer takes the claim, the lower bound, the line, the name and the `writable` flag from the finding. It never counts tests or decides what is unused.
-- **Safe or silent.** A fixer returns nothing rather than guess. Every refusal also writes a plain-language reason into `Drafter.last_skipped`, a list of `(finding id, reason)` for the latest call. `Drafter.describe_skipped()` returns the same list as readable lines; Warden reads it after every call and prints the lines as `drafter_skipped` in its JSON, so a person can see why a finding was left alone.
+- **Safe, and never silent about a surprise.** A fixer returns nothing rather than guess. Every refusal also writes a plain-language reason into `Drafter.last_skipped`, a list of `(finding id, reason)` for the latest call. `Drafter.describe_skipped()` returns the same list as readable lines; Warden reads it after every call and prints the lines as `drafter_skipped` in its JSON, so a person can see why a finding was left alone. A deliberate refusal is not an error. An exception nobody meant to raise is: it is caught only at the boundaries that must not crash the loop (the fixer wrapper in `drafter._safe.run_fixer`, the call into a pluggable fixer, the reading of a hostile finding), and there it is recorded as `internal error (ExceptionType: message)` in the same list and logged at WARNING on the `drafter` logger (traceback at DEBUG). Where the exception type is knowable (a malformed finding, a mismatch with Warden while building the proposal) only those types are caught; anything else propagates to Warden instead of passing for a quiet "no safe fix". `tests/test_observable_failures.py` injects bugs and checks both channels.
 - **Finding the file.** The path in a finding is tried as given under the target. Only if no such file exists is a leading folder equal to the target's own name removed (older Ghost output spelled a root-level file as `tgt/m.py`). The file must be a real file inside the target: no `..`, no symlink on the way, not under `tests`, `.git`, `.venv` or `.github`, and not a test file or a test or build configuration file.
 - **Checking Ghost's lines.** Before proposing to remove code, Drafter reads the file as plain text (it may not use a Python parser) and requires that Ghost's lines are exactly one `def`, `async def` or `class` at the left edge, running to where Ghost says it ends. Anything odd is refused: a body on the header line, tabs mixed with spaces, a backslash line continuation, a multi-line string with text at the left edge, a second definition of the same name, or the name used as a decorator.
 - **Smallest possible document edit.** Only the claim phrase (the number, "tests", and a following "passed", "passing" or "collected") is replaced. The rest of the line is untouched. A leading BOM and the file's line endings are kept.
@@ -55,33 +55,61 @@ Ghost finding  ->  Drafter.propose(target, findings, baseline)  ->  Transformati
 
 ## IMPORTANT BOUNDARIES
 
-Drafter imports `warden.models` and nothing else from the stack. It does not import Burnish, Ghost Tools, SWIZZLE or ASSAY, and it does not use `ast` or `subprocess`. `tests/test_independence.py` enforces all of that.
+Drafter's modules import the standard library, themselves, and exactly these others: `warden.models` (the proposal shape, `defects_from_ghost`), `cns.defect` and `cns.seat` (the shared `Defect` and `FileEdit` rows), and, in the command line only, `warden.ghost` (Warden's own reader of Ghost's JSON and its read-only Ghost scan). It does not import Burnish, Ghost Tools, SWIZZLE, ASSAY or the Judge, and it does not use `ast`, `subprocess` or `importlib`. `tests/test_independence.py` enforces this as an allowlist: any other import fails the test, and so does an allowed name nothing uses, so this paragraph cannot drift.
 
 ## Install
 
 ```bash
-pip install "git+https://github.com/wking53214/Warden.git@2cf0eeccf839f88d624deb133fe1cb4b16a99009"
 pip install git+https://github.com/wking53214/Drafter.git
 ```
 
-### Bumping the Warden pin
+That installs the Warden and CNS commits pinned in `pyproject.toml` (`dependencies`).
 
-This package depends on one exact Warden commit (see `dependencies` in `pyproject.toml`), so a change on
-Warden's `main` cannot break it without anyone noticing. To move to a newer Warden:
+### Bumping the pins
 
-1. Pick the Warden commit (or `vX.Y.Z` tag) you want.
-2. Put it after the `@` in the `warden @ git+...` line of `pyproject.toml`.
-3. Run `pip install -e ".[dev]"` and `pytest`. The tests check that the pin is a tag or a full commit and that
-   this package's `requires_contract` matches the installed Warden's `CONTRACT`.
-4. Open a pull request. CI runs the same checks.
+This package depends on one exact Warden commit and one exact CNS commit, so a change on either's `main` cannot
+break it without anyone noticing. To move to a newer one:
+
+1. Pick the full 40-character commit you want, and note the tag it corresponds to.
+2. Put it after the `@` in the matching line of `pyproject.toml`, with the tag in a trailing comment.
+3. Run `pip install -e ".[dev]"` and `pytest`. The tests check that the Warden pin is a tag or a full commit, that
+   the CNS pin is a full commit, and that this package's `requires_contract` matches the installed Warden's `CONTRACT`.
+4. Open a pull request. CI runs the same checks, and the `integration` job runs the whole suite against the circuit.
+
+The `integration` job also pins its four sibling checkouts (ghost_tools, JUDGE, SWIZZLE, ASSAY) to full commits;
+bump them in `.github/workflows/tests.yml` the same way.
 
 ## Usage
 
-No command line of its own. Warden loads it:
+Warden loads it:
 
 ```bash
 warden tagteam PATH --drafter drafter.seat:Drafter --authorize ACTOR --reason TEXT --ghost-root GHOST_TOOLS
 ```
+
+For a person who wants to see what it would propose without running the loop, there is a read-only dry run:
+
+```bash
+drafter --version
+drafter propose PATH --findings ghost.json     # findings from a saved Ghost JSON report
+drafter propose PATH --ghost-root GHOST_TOOLS  # or Warden's own read-only Ghost scan
+drafter propose PATH ... --scope documentation # as Warden sets it from the grant
+drafter propose PATH ... -v                    # -v logs INFO to stderr, -vv adds refusals and tracebacks
+```
+
+It prints one JSON object on stdout: `proposal` (the intent, scope, affected files and every edit with its `old`
+and `new` text, or `null`) and `skipped` (each finding Drafter recognised but left alone, with the reason). It
+writes nothing. Exit codes:
+
+| code | meaning |
+|---|---|
+| 0 | a proposal was made |
+| 1 | nothing to propose (the JSON still lists why findings were skipped) |
+| 2 | usage error: an unknown option, or PATH is not a folder |
+| 3 | findings could not be obtained (Ghost could not run, or the findings file is unreadable); this is unknown, never "nothing to propose" |
+
+`python -m drafter` is the same command. As a library, Drafter configures no logging; attach a handler to the
+`drafter` logger to see its warnings.
 
 ## LIFECYCLE / EXECUTION MODEL
 
@@ -97,15 +125,13 @@ Warden calls `Drafter.propose` once per cycle and stops calling it when it retur
 - With the real Ghost scan and the real Warden loop, a root-level module, a nested module, a three-folder-deep module and two README claims (one in the root, one in a subfolder) each produce a proposal that Warden applies cleanly, and the loop then converges. **VERIFIED** by `tests/test_real_ghost.py`.
 - A module-level list of ten strings tested with `in` inside a loop becomes a set, byte for byte otherwise (a tuple too; a multi-line literal with comments, CRLF and a BOM all kept); every other kind of element (an f-string, a name, a tuple, a hex number, implicit concatenation) and every other kind of use (iteration, indexing, `len`, concatenation, a method, a rebinding, a keyword argument, a mention in a string, another file or a document) is refused with a reason; an old Ghost that does not name the container gets no proposal; and through the whole gate the set stands and Ghost falls silent. **VERIFIED** by `tests/test_list_membership_fixer.py`.
 - Seated in the whole circuit (Ghost, SWIZZLE, ASSAY, Judge and Burnish all live, through `warden tagteam --stack`), a dead function is commented out under a `code` grant and skipped with a reason under a `documentation` grant; both runs end `ACCEPT`, exit 0. **VERIFIED** by hand on 2026-10-14 on a scratch repository; recorded in Warden's `docs/REGISTRY.json`.
-- It imports only `warden.models`, never writes, never counts. **VERIFIED** by `tests/test_independence.py`.
+- It imports only the modules named under "Important boundaries", never writes, never counts. **VERIFIED** by `tests/test_independence.py`.
 
-304 tests are collected in this tree. With Ghost Tools and Warden on the import path, 304 pass on Warden `v0.11.0` on CPython 3.13 (run 2026-10-14).
-
-Without Ghost Tools on the import path, the 6 tests in `tests/test_real_ghost.py` and the 2 real-Ghost tests in `tests/test_list_membership_fixer.py` skip with the reason "the real Ghost scan needs ghost_buster on PYTHONPATH". Install Ghost Tools (`pip install "git+https://github.com/wking53214/ghost_tools.git@V1.9.1"`) to run them. The 5 full-gate tests in `tests/test_in_the_loop.py` and `tests/test_real_ghost.py` also need SWIZZLE and ASSAY checkouts beside this one (folder names matched without regard to case, or point `CIRCUIT_ROOT` at the folder that holds them) and the Judge importable; otherwise they skip and say so. Nothing else is skipped.
+Test totals are not written here, because a number in prose goes stale; run `pytest -q -rs` to see the current ones and the reason for every skip. Without Ghost Tools on the import path, the tests that need the real Ghost scan skip with the reason "the real Ghost scan needs ghost_buster on PYTHONPATH"; the tests that run the full gate also need SWIZZLE and ASSAY checkouts beside this one (folder names matched without regard to case, or point `CIRCUIT_ROOT` at the folder that holds them) and the Judge importable, and skip and say so otherwise. Nothing else skips. CI runs both ways: the `pytest` job is the fast standalone run on Python 3.11, 3.12 and 3.13, and the `integration` job checks out the four siblings at the full commits written in `.github/workflows/tests.yml`, runs everything, and fails if even one test skips. `ruff check .` and `mypy` (strict, configured in `pyproject.toml`) are also CI gates.
 
 ### Testing against the pin
 
-Drafter's tests import Warden from the import path. Against the pinned tag `v0.11.0`, all 304 pass on CPython 3.13 with Ghost Tools, SWIZZLE, ASSAY and the Judge beside this checkout (checked 2026-10-14). `v0.11.0` also sets the Drafter's `scope` from the grant; `v0.10.1` does not, and the tests pass against it too, since none depends on the handoff. `v0.10.1` and `v0.11.0` both carry the held-result rule that `tests/test_real_ghost.py::test_an_unverified_run_puts_the_applied_edit_back` expects; `v0.9.0` does not, so that test fails on the old pin.
+Drafter's tests import Warden from the import path, so they run against whatever the install resolved, which is the commit pinned in `pyproject.toml`. Warden sets the Drafter's `scope` from the grant (0.11.0 and newer); the tests do not depend on that handoff. A Warden without the held-result rule fails `tests/test_real_ghost.py::test_an_unverified_run_puts_the_applied_edit_back`; the pin carries it.
 
 ## WHAT IS BEAUTIFUL
 
@@ -132,11 +158,11 @@ The tests named above: against hand-built Ghost findings on scratch trees, and (
 - The list fixer needs a Ghost that reports `name`, `container` and `defined_at` on the finding (ghost_tools after 1.9.1). An older Ghost's finding gets no proposal and a reason.
 - A document claim split across two lines is skipped, as is a claim that is not below Ghost's lower bound (no edit is made when the number is not an undercount).
 - Ghost does not report a decorated function as dead (it counts a decorator as a use), so the decorator handling is exercised by hand-built findings only.
-- Drafter has no output of its own. The reasons it stayed silent reach a person only through Warden's `drafter_skipped` field (at most 20 lines, each cut to 200 characters).
+- Drafter has no service or output file of its own. Inside Warden, the reasons it stayed silent reach a person through Warden's `drafter_skipped` field (at most 20 lines, each cut to 200 characters). Outside it, the `drafter propose` dry run prints them in full, and the `drafter` logger carries warnings for real errors.
 
 ## WHAT IS STILL UGLY
 
-- The claim wording changes the meaning slightly on purpose: "16 tests passed" becomes "at least 79 `test_*` functions", because Ghost counts test functions and does not run them. Where the claim began a sentence, the sentence starts "The suite holds"; elsewhere it reads "at least M ...". Odd sentences can still read a little stiffly.
+- The claim wording changes the meaning slightly on purpose: "N tests passed" becomes "at least M `test_*` functions", because Ghost counts test functions and does not run them. Where the claim began a sentence, the sentence starts "The suite holds"; elsewhere it reads "at least M ...". Odd sentences can still read a little stiffly.
 - The text scanner and the Markdown checks are hand-rolled, so they are long.
 
 ## KNOWN DEFECTS
@@ -151,11 +177,11 @@ More fixers, each added only for a Ghost detector whose finding has a safe mecha
 
 ## CLAIMS VS REALITY
 
-The README says Drafter never writes and never measures. The tests read its source and fail if it opens a file for writing or imports `ast`. The README does not say it fixes much, because it does not.
+The README says Drafter never writes and never measures. The tests read its source and fail if it opens a file for writing or imports `ast`. The README does not say it fixes much, because it does not. Its import and version claims are tested (`tests/test_independence.py`, `tests/test_release.py`), and the README carries no test totals.
 
 ## Status
 
-Experimental, version 0.1.0, maintained by one person.
+Experimental, version 0.2.0, maintained by one person. Changes are listed in `CHANGELOG.md`. No release has been tagged yet.
 
 ## Support
 

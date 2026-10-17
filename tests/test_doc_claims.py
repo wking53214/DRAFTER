@@ -87,7 +87,8 @@ def test_python_3_10_tests_passed_is_refused_not_mangled(tmp_path):
 
 def test_dr_smith_is_not_cut_at_the_full_stop(tmp_path):
     new, _ = _new(tmp_path, "# T\n\nDr. Smith says 10 tests passed.\n", 3, documented=10)
-    assert new == "# T\n\nDr. Smith says at least 79 `test_*` functions (an earlier version of this document gave 10).\n"
+    assert new == ("# T\n\nDr. Smith says at least 79 `test_*` functions "
+                   "(an earlier version of this document gave 10).\n")
 
 
 @pytest.mark.parametrize("text, line, why", [
@@ -171,7 +172,8 @@ def test_the_edit_touches_only_the_claim_bytes_with_a_bom_and_crlf(tmp_path):
     root = _readme(tmp_path, text, newline="\r\n")
     proposal, _ = propose(root, doc_finding(line=3))
     (edit,) = proposal.edits
-    assert edit.old.startswith(BOM + "# T\n") and edit.new.startswith(BOM + "# T\n")      # Warden shows CRLF files with LF
+    # Warden shows CRLF files with LF
+    assert edit.old.startswith(BOM + "# T\n") and edit.new.startswith(BOM + "# T\n")
     assert edit.new == edit.old.replace("16 tests passed", NEW)
 
 

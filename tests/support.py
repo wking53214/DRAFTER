@@ -19,7 +19,8 @@ GHOST_ARGS = ["--json", "--single-repo", "--no-tests", "--no-secrets", "--no-led
 def ghost_root() -> Path:
     """The folder that holds the `ghost_buster` package, or skip the test."""
     module = pytest.importorskip(
-        "ghost_buster", reason="the real Ghost scan needs ghost_buster on PYTHONPATH (github.com/wking53214/ghost_tools)")
+        "ghost_buster",
+        reason="the real Ghost scan needs ghost_buster on PYTHONPATH (github.com/wking53214/ghost_tools)")
     return Path(module.__file__).resolve().parent.parent
 
 

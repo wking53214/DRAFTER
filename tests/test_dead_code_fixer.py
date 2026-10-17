@@ -22,7 +22,8 @@ def _finding(file="pkg/mod.py", name="unused", kind="function", start=5, end=6, 
             "evidence": {"file": file, "line_start": start, "line_end": end}}
 
 
-def _repo(root: Path, source: str = SOURCE, test: str = "from pkg.mod import keep\n\ndef test_k():\n    assert keep() == 1\n"):
+def _repo(root: Path, source: str = SOURCE,
+          test: str = "from pkg.mod import keep\n\ndef test_k():\n    assert keep() == 1\n"):
     (root / "pkg").mkdir()
     (root / "pkg" / "__init__.py").write_text("", encoding="utf-8")
     (root / "pkg" / "mod.py").write_text(source, encoding="utf-8")

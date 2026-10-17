@@ -165,7 +165,6 @@ def _elements(tokens: list[tokenize.TokenInfo], open_at: int, name: str) -> int:
         count += 1
         expect_element = False
     refuse(f"the literal defining {name} never closes")
-    raise AssertionError  # unreachable
 
 
 def _one_element(tokens: list[tokenize.TokenInfo], k: int, name: str) -> int:
@@ -182,7 +181,8 @@ def _one_element(tokens: list[tokenize.TokenInfo], k: int, name: str) -> int:
                    "its value in a set might not compare the way the list did")
         return k + 1
     if tok.type == tokenize.STRING:
-        prefix = re.match(r"[A-Za-z]*", tok.string).group(0)
+        found = re.match(r"[A-Za-z]*", tok.string)
+        prefix = found.group(0) if found else ""
         if not _STRING_PREFIX.fullmatch(prefix):
             refuse(f"{name} holds a string with the prefix {prefix!r} (an f-string is an expression, not a literal)")
         nxt = next((tokens[j] for j in range(k + 1, len(tokens)) if _significant(tokens[j])), None)
@@ -194,7 +194,6 @@ def _one_element(tokens: list[tokenize.TokenInfo], k: int, name: str) -> int:
     if tok.type == _FSTRING_START:                 # Python 3.12+ tokenizes f-strings in pieces
         refuse(f"{name} holds an f-string on line {tok.start[0]}, which is an expression, not a literal")
     refuse(f"{name} holds an element that is not a plain literal on line {tok.start[0]} ({tok.string[:30]!r})")
-    raise AssertionError  # unreachable
 
 
 # --- every other use of the name -------------------------------------------
@@ -204,7 +203,8 @@ def _only_membership_elsewhere(tokens: list[tokenize.TokenInfo], name: str, open
     sig = [i for i, t in enumerate(tokens) if _significant(t)]
     pos = {idx: n for n, idx in enumerate(sig)}
     for i, tok in enumerate(tokens):
-        if tok.type == tokenize.STRING and re.search(r"(?<![A-Za-z0-9_])%s(?![A-Za-z0-9_])" % re.escape(name), tok.string):
+        if tok.type == tokenize.STRING and re.search(
+                r"(?<![A-Za-z0-9_])%s(?![A-Za-z0-9_])" % re.escape(name), tok.string):
             refuse(f"{name} appears inside a string on line {tok.start[0]}, so it may be looked up by name")
         if tok.type != tokenize.NAME or tok.string != name:
             continue
@@ -226,7 +226,7 @@ def _only_membership_elsewhere(tokens: list[tokenize.TokenInfo], name: str, open
             refuse(f"line {tok.start[0]} iterates over {name} (`for ... in {name}`), and a set has no order")
 
 
-def _shape(before, after) -> str:
+def _shape(before: Optional[tokenize.TokenInfo], after: Optional[tokenize.TokenInfo]) -> str:
     left = before.string if before is not None else "start of file"
     right = after.string if after is not None else "end of file"
     return f"between {left!r} and {right!r}"
@@ -284,4 +284,4 @@ def _rebracket(body: str, opener: tokenize.TokenInfo, closer: tokenize.TokenInfo
 
     swap(opener, "{")
     swap(closer, "}")
-    return "".join(c + e for c, (_, e) in zip(lines, rows))
+    return "".join(c + e for c, (_, e) in zip(lines, rows, strict=True))
