@@ -68,7 +68,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           repository: wking53214/JUDGE
-          ref: 50f90f47660916d99deeb11370dd57bf85922dbe  # tested set, package version 0.4.3
+          ref: f26db68d960b091c56396d1917ded8785b7af910  # tested set, package version 0.4.4
           path: circuit/JUDGE
           token: ${{ secrets.CIRCUIT_TOKEN || github.token }}
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2

@@ -6,6 +6,19 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.5] - 2026-10-21
+
+### Changed
+
+- Warden is re-pinned from `580f659` (0.13.3) to the full commit `36e98433f4928b7d12905f02b56e55ee1943b56e`
+  (Warden 0.13.4; untagged). Warden 0.13.4 requires an instrument root to be a git checkout with a readable version
+  and refuses a site-packages root. Drafter's integration tests and CI use clean clones, so no test or assertion
+  changed. The pin comment says so, and `tests/test_warden_pin.py` checks it against the installed release.
+  `pip install -e ".[dev]"` resolves and `pip check` is clean, with no `--no-deps` step.
+- The `integration` job's JUDGE checkout moved from `50f90f4` (0.4.3) to `f26db68d960b091c56396d1917ded8785b7af910`
+  (0.4.4), the head of its branch, which the stack manifest set moves to. ghost_tools `5d7a386` (1.10.1), SWIZZLE
+  `8166c47` (0.8.1) and ASSAY `4c41556` (0.11.1) are unchanged.
+
 ## [0.2.4] - 2026-10-21
 
 ### Changed

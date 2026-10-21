@@ -8,7 +8,7 @@ The in-loop maker. It reads what Ghost Tools found and proposes one fix at a tim
 
 One of seven repositories in a stack that improves code under human control. Drafter has one job: given a Ghost Tools finding, return the change that would close it, as data. [Warden](https://github.com/wking53214/Warden) runs the loop around it. Warden asks Drafter for a change, checks a person granted it, runs the target's tests, applies the change, runs the tests again, and has Ghost look again. Drafter is then asked again, until it has nothing left to propose.
 
-Version `0.2.4`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Both are pinned to full commits in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
+Version `0.2.5`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Both are pinned to full commits in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
 
 ## WHAT IT DOES NOT OWN
 
@@ -106,7 +106,7 @@ drafter propose PATH ... --scope documentation # as Warden sets it from the gran
 drafter propose PATH ... -v                    # -v logs INFO to stderr, -vv adds refusals and tracebacks
 ```
 
-With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.3 refuses a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so.
+With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.3 refuses a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so. Warden 0.13.4 (the pinned release) also requires that root to be a git checkout with a readable version and refuses a site-packages root, so point `--ghost-root` at a clone, not at an installed copy.
 
 It prints one JSON object on stdout: `proposal` (the intent, scope, affected files and every edit with its `old`
 and `new` text, or `null`) and `skipped` (each finding Drafter recognised but left alone, with the reason). It
@@ -193,7 +193,7 @@ The README says Drafter never writes and never measures. The tests read its sour
 
 ## Status
 
-Experimental, version 0.2.4, maintained by one person. Changes are listed in `CHANGELOG.md`. An older tag, `v0.10.0`, exists in this repository from earlier numbering and does not correspond to this version. Releases of this version are not tagged yet; tagging is the owner's decision.
+Experimental, version 0.2.5, maintained by one person. Changes are listed in `CHANGELOG.md`. An older tag, `v0.10.0`, exists in this repository from earlier numbering and does not correspond to this version. Releases of this version are not tagged yet; tagging is the owner's decision.
 
 ## Support
 
