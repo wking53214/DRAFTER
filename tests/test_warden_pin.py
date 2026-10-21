@@ -34,8 +34,9 @@ def test_the_pin_comment_names_the_installed_warden_release():
     assert f"Warden {installed}" in _pin_comment(), f"pin comment {_pin_comment()!r} vs installed {installed}"
 
 
-def test_cns_is_pinned_to_the_same_commit_as_wardens_own_cns_pin():
-    """Warden pins CNS by commit. Two different CNS commits cannot both be installed, so they must be one."""
+def test_the_cns_pin_text_equals_wardens_own_cns_requirement():
+    """Warden requires CNS by its release tag. pip treats a tag URL and a commit URL as two sources, so this
+    package's pin text must equal Warden's requirement text exactly."""
     from importlib import metadata
 
     drafter_deps = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))["project"]["dependencies"]

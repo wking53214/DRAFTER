@@ -66,12 +66,12 @@ included) to the commits its stack manifest names:
 python3 -m venv .venv && .venv/bin/pip install -r contracts/install-stack.txt
 ```
 
-Run it from a checkout of CNS, on the branch `claude/horsemen-production-status-5wsndb` until that is on `main`. This
-README names no commit of this repository, because a commit cannot name itself, and the install file is what records
-which commit of it was tested with the others. Once a release tag exists, install this package alone with
-`git+https://github.com/wking53214/DRAFTER.git@<tag>`. Do not install from `main`: it still holds the 0.1.0 code,
-which has no command line. Installing this package installs the Warden and CNS commits pinned in
-`pyproject.toml` (`dependencies`).
+Run it from a checkout of CNS on its `main` branch, which holds the install file. This README names no commit of this
+repository, because a commit cannot name itself, and the install file is what records which commit of it was tested
+with the others. Once a release tag exists, install this package alone with
+`git+https://github.com/wking53214/DRAFTER.git@<tag>`. Do not install it alone from `main`: `main` moves, and nothing
+there says it was tested with the other repositories. Installing this package installs the Warden and CNS commits
+pinned in `pyproject.toml` (`dependencies`).
 
 ### Bumping the pins
 

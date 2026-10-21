@@ -13,7 +13,8 @@ below are the ones `pyproject.toml` declared.
 - CNS is pinned by its release tag, `cns @ git+https://github.com/wking53214/CNS.git@v1.9.0` (the tag peels to
   `da18e411743d4e3b0e783105394d845fb1c16746`), replacing the full-commit spelling, so the pin text matches Warden's own
   CNS pin and the other repositories of the circuit (pip treats a tag URL and a commit URL as two sources).
-  `test_the_cns_dependency_is_pinned_to_a_full_commit` asserted the old spelling and now asserts the tag spelling.
+  The test that asserted the old spelling, formerly `test_the_cns_dependency_is_pinned_to_a_full_commit`, is now
+  `test_the_cns_dependency_is_pinned_to_its_release_tag` and asserts the tag spelling.
 - Warden is re-pinned from `decc3c3b5af479ad0eef3df4d66dbcb21e90897c` (0.13.5) to the full commit
   `0c1ea567f0b69586cfd735f82260774aec9552bb` (Warden 0.13.6; untagged). The README sentence naming the pinned Warden
   says 0.13.6.
