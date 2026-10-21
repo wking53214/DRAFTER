@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 import drafter
-from drafter.cli import EXIT_NO_FINDINGS, EXIT_NOTHING, EXIT_PROPOSED, EXIT_USAGE, main
+from drafter.cli import EXIT_NO_FINDINGS, EXIT_NOTHING, EXIT_PIPE_CLOSED, EXIT_PROPOSED, EXIT_USAGE, main
 from support import dead_finding, doc_finding, ghost_root, many_tests
 
 REPO = Path(drafter.__file__).resolve().parent.parent
@@ -45,10 +45,10 @@ def _snapshot(root: Path) -> dict[str, bytes]:
 
 
 def test_exit_codes_are_the_documented_ones():
-    assert (EXIT_PROPOSED, EXIT_NOTHING, EXIT_USAGE, EXIT_NO_FINDINGS) == (0, 1, 2, 3)
+    assert (EXIT_PROPOSED, EXIT_NOTHING, EXIT_USAGE, EXIT_NO_FINDINGS, EXIT_PIPE_CLOSED) == (0, 1, 2, 3, 4)
     doc = sys.modules["drafter.cli"].__doc__ or ""
     for code, meaning in ((0, "a proposal was made"), (1, "nothing to propose"), (2, "usage error"),
-                          (3, "findings could not be obtained")):
+                          (3, "findings could not be obtained"), (4, "the output pipe was closed")):
         assert re.search(rf"^\s+{code}\s+{meaning}", doc, re.MULTILINE), (code, meaning)
 
 
@@ -107,6 +107,15 @@ def test_a_usage_error_is_exit_2(argv, capsys):
     assert stop.value.code == EXIT_USAGE
 
 
+@pytest.mark.parametrize("argv", [["propose", ".", "--finding", "f.json"], ["propose", ".", "--ghost", "g"],
+                                  ["propose", ".", "--scop", "code"], ["propose", ".", "--verb"], ["--vers"]])
+def test_an_abbreviated_option_is_a_usage_error_not_a_guess(argv, capsys):
+    with pytest.raises(SystemExit) as stop:
+        main(argv)
+    assert stop.value.code == EXIT_USAGE
+    assert "usage:" in capsys.readouterr().err
+
+
 def test_a_path_that_is_not_a_folder_is_exit_2(tmp_path, capsys):
     assert main(["propose", str(tmp_path / "missing")]) == EXIT_USAGE
     assert "not a folder" in capsys.readouterr().err
@@ -131,7 +140,7 @@ def test_a_ghost_that_cannot_run_is_exit_3_not_exit_1(tmp_path, capsys, monkeypa
 
 
 def test_a_scan_with_no_ghost_root_is_refused_by_warden_and_is_exit_3(tmp_path, capsys):
-    """Warden 0.13.2 will not scan with no named root (an installed Ghost never stands in). That is exit 3, not 1."""
+    """Warden 0.13.3 will not scan with no named root (an installed Ghost never stands in). That is exit 3, not 1."""
     assert main(["propose", str(_tree(tmp_path))]) == EXIT_NO_FINDINGS
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -175,6 +184,43 @@ def test_python_dash_m_drafter_works_as_a_process(tmp_path):
                            str(_findings(tmp_path, doc_finding(line=3)))],
                           capture_output=True, text=True, env=env, cwd=tmp_path, check=False)
     assert done.returncode == EXIT_PROPOSED and json.loads(done.stdout)["proposal"]["edits"]
+
+
+class _ClosedPipe:
+    """A stdout whose reader has gone away."""
+
+    def write(self, _text: str) -> int:
+        raise BrokenPipeError(32, "Broken pipe")
+
+    def flush(self) -> None:
+        raise BrokenPipeError(32, "Broken pipe")
+
+
+def test_a_closed_output_pipe_is_exit_4_with_a_message_not_a_traceback(tmp_path, capsys, monkeypatch):
+    root = _tree(tmp_path)
+    findings = _findings(tmp_path, doc_finding(line=3))
+    monkeypatch.setattr(sys, "stdout", _ClosedPipe())
+    code = main(["propose", str(root), "--findings", str(findings)])
+    assert code == EXIT_PIPE_CLOSED and code not in (EXIT_NOTHING, EXIT_PROPOSED)
+    err = capsys.readouterr().err
+    assert "output pipe was closed" in err and "Traceback" not in err
+
+
+def test_python_dash_m_drafter_into_a_closed_pipe_exits_4_cleanly(tmp_path):
+    """The real thing: stdout is a pipe nobody reads, as with `drafter propose ... | head -c0`."""
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(REPO), os.environ.get("PYTHONPATH", "")])}
+    root = _tree(tmp_path)
+    findings = _findings(tmp_path, doc_finding(line=3))
+    read_end, write_end = os.pipe()
+    os.close(read_end)                                  # every writer now gets EPIPE
+    try:
+        done = subprocess.run([sys.executable, "-m", "drafter", "propose", str(root), "--findings", str(findings)],
+                              stdout=write_end, stderr=subprocess.PIPE, text=True, env=env, cwd=tmp_path, check=False)
+    finally:
+        os.close(write_end)
+    assert done.returncode == EXIT_PIPE_CLOSED, done.stderr
+    assert "Traceback" not in done.stderr and "BrokenPipeError" not in done.stderr
+    assert "output pipe was closed" in done.stderr
 
 
 def test_the_real_ghost_scan_feeds_the_dry_run(tmp_path, capsys):

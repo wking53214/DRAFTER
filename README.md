@@ -8,7 +8,7 @@ The in-loop maker. It reads what Ghost Tools found and proposes one fix at a tim
 
 One of seven repositories in a stack that improves code under human control. Drafter has one job: given a Ghost Tools finding, return the change that would close it, as data. [Warden](https://github.com/wking53214/Warden) runs the loop around it. Warden asks Drafter for a change, checks a person granted it, runs the target's tests, applies the change, runs the tests again, and has Ghost look again. Drafter is then asked again, until it has nothing left to propose.
 
-Version `0.2.3`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Both are pinned to full commits in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
+Version `0.2.4`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Both are pinned to full commits in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
 
 ## WHAT IT DOES NOT OWN
 
@@ -59,14 +59,19 @@ Drafter's modules import the standard library, themselves, and exactly these oth
 
 ## Install
 
+Install the whole circuit with the install file in the CNS repository, which pins every repository (this one
+included) to the commits its stack manifest names:
+
 ```bash
-pip install git+https://github.com/wking53214/Drafter.git@189d3bd90f9cdb9625d35f718d26f6809cbcc652
+python3 -m venv .venv && .venv/bin/pip install -r contracts/install-stack.txt
 ```
 
-This installs a pinned commit of the `claude/horsemen-production-status-5wsndb` branch (Drafter 0.2.1, the commit the
-circuit's tested set records), not `main`: `main` still holds the 0.1.0 code, which has no command line. Once this
-branch is merged and a release is tagged, point the install at that release instead. Either way it installs the
-Warden and CNS commits pinned in `pyproject.toml` (`dependencies`).
+Run it from a checkout of CNS, on the branch `claude/horsemen-production-status-5wsndb` until that is on `main`. This
+README names no commit of this repository, because a commit cannot name itself, and the install file is what records
+which commit of it was tested with the others. Once a release tag exists, install this package alone with
+`git+https://github.com/wking53214/DRAFTER.git@<tag>`. Do not install from `main`: it still holds the 0.1.0 code,
+which has no command line. Installing this package installs the Warden and CNS commits pinned in
+`pyproject.toml` (`dependencies`).
 
 ### Bumping the pins
 
@@ -101,7 +106,7 @@ drafter propose PATH ... --scope documentation # as Warden sets it from the gran
 drafter propose PATH ... -v                    # -v logs INFO to stderr, -vv adds refusals and tracebacks
 ```
 
-With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.2 refuses a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so.
+With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.3 refuses a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so.
 
 It prints one JSON object on stdout: `proposal` (the intent, scope, affected files and every edit with its `old`
 and `new` text, or `null`) and `skipped` (each finding Drafter recognised but left alone, with the reason). It
@@ -111,8 +116,9 @@ writes nothing. Exit codes:
 |---|---|
 | 0 | a proposal was made |
 | 1 | nothing to propose (the JSON still lists why findings were skipped) |
-| 2 | usage error: an unknown option, or PATH is not a folder |
+| 2 | usage error: an unknown option (options are not abbreviated: `--finding` is refused), or PATH is not a folder |
 | 3 | findings could not be obtained (Ghost could not run, or the findings file is unreadable); this is unknown, never "nothing to propose" |
+| 4 | the output pipe was closed before the report was written (for example `drafter propose ... \| head`); the report was not delivered, so this is unknown, never "nothing to propose" |
 
 `python -m drafter` is the same command. As a library, Drafter configures no logging; attach a handler to the
 `drafter` logger to see its warnings.
@@ -133,7 +139,7 @@ Warden calls `Drafter.propose` once per cycle and stops calling it when it retur
 - Seated in the whole circuit (Ghost, SWIZZLE, ASSAY, Judge and Burnish all live, through `warden tagteam --stack`), a dead function is commented out under a `code` grant and skipped with a reason under a `documentation` grant; both runs end `ACCEPT`, exit 0. **VERIFIED** by hand on 2026-10-14 on a scratch repository; recorded in Warden's `docs/REGISTRY.json`.
 - It imports only the modules named under "Important boundaries", never writes, never counts. **VERIFIED** by `tests/test_independence.py`.
 
-Test totals are not written here, because a number in prose goes stale; run `pytest -q -rs` to see the current ones and the reason for every skip. Without Ghost Tools on the import path, the tests that need the real Ghost scan skip with the reason "the real Ghost scan needs ghost_buster on PYTHONPATH"; the tests that run the full gate also need SWIZZLE and ASSAY checkouts beside this one (folder names matched without regard to case, or point `CIRCUIT_ROOT` at the folder that holds them) and the Judge importable, and skip and say so otherwise. ASSAY's answer key also needs `numpy==2.5.4` and `matplotlib==3.11.2` installed wherever it is graded (the `integration` job installs them; ASSAY 0.11.1 exits 1 when a claim is skipped). Nothing else skips. CI runs both ways: the `pytest` job is the fast standalone run on Python 3.11, 3.12 and 3.13, and the `integration` job checks out the four siblings at the full commits written in `.github/workflows/tests.yml`, runs everything, and fails if even one test skips. `ruff check .` and `mypy` (strict, configured in `pyproject.toml`) are also CI gates.
+Test totals are not written here, because a number in prose goes stale; run `pytest -q -rs` to see the current ones and the reason for every skip. Without Ghost Tools on the import path, the tests that need the real Ghost scan skip with the reason "the real Ghost scan needs ghost_buster on PYTHONPATH"; the tests that run the full gate also need SWIZZLE and ASSAY checkouts beside this one (folder names matched without regard to case, or point `CIRCUIT_ROOT` at the folder that holds them) and the Judge importable, and skip and say so otherwise. ASSAY's answer key also needs numpy and matplotlib installed wherever it is graded (the `integration` job installs `matplotlib==3.11.2` and, per interpreter, `numpy==2.4.6` on Python 3.11 or `numpy==2.5.4` on 3.12 and 3.13, because numpy 2.5 requires Python 3.12 or newer; ASSAY 0.11.1 exits 1 when a claim is skipped). Nothing else skips. CI runs both ways: the `pytest` job is the fast standalone run on Python 3.11, 3.12 and 3.13, and the `integration` job checks out the four siblings at the full commits written in `.github/workflows/tests.yml`, runs everything, and fails if even one test skips. `ruff check .` and `mypy` (strict, configured in `pyproject.toml`) are also CI gates.
 
 ### Testing against the pin
 
@@ -187,7 +193,7 @@ The README says Drafter never writes and never measures. The tests read its sour
 
 ## Status
 
-Experimental, version 0.2.3, maintained by one person. Changes are listed in `CHANGELOG.md`. An older tag, `v0.10.0`, exists in this repository from earlier numbering and does not correspond to this version. Releases of this version are not tagged yet; tagging is the owner's decision.
+Experimental, version 0.2.4, maintained by one person. Changes are listed in `CHANGELOG.md`. An older tag, `v0.10.0`, exists in this repository from earlier numbering and does not correspond to this version. Releases of this version are not tagged yet; tagging is the owner's decision.
 
 ## Support
 

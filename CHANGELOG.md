@@ -6,6 +6,37 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.4] - 2026-10-21
+
+### Changed
+
+- Warden is re-pinned from `9d9a71d` (0.13.2) to the full commit `580f659336818b4a5a2c0ca235d2344012536426`
+  (Warden 0.13.3; untagged). The pin comment says so, and `tests/test_warden_pin.py` checks it against the installed
+  release. `pip install -e ".[dev]"` resolves and `pip check` is clean, with no `--no-deps` step.
+- The `integration` job's sibling checkouts moved to the commits the CNS stack manifest records (the 0.2.3 entry
+  called its set the newest, but it was one commit behind for three of the four): ghost_tools `5d7a386` (1.10.1,
+  unchanged), JUDGE `50f90f4` (0.4.3), SWIZZLE `8166c47` (0.8.1), ASSAY `4c41556` (0.11.1). Each comment states the
+  package version that was checked.
+
+### Fixed
+
+- The `integration` job failed on Python 3.11: it installed `numpy==2.5.4` on every leg of its matrix, and numpy 2.5
+  requires Python 3.12 or newer (on 3.11 pip offers versions only up to 2.4.6), so that leg could not install it and
+  the circuit tests could not grade ASSAY's answer key. The install is now pinned per interpreter with environment
+  markers: `numpy==2.4.6` below Python 3.12, `numpy==2.5.4` from 3.12, and `matplotlib==3.11.2` on all three. A test
+  checks that every numpy pin in the workflow is covered by a marker for every Python in the matrix.
+- The README Install section pinned `189d3bd` and called it the commit the circuit's tested set records; the CNS stack
+  manifest records a different commit, and a commit cannot name itself. It now says to install with the CNS install
+  file (`pip install -r contracts/install-stack.txt` from the CNS repository, on the branch
+  `claude/horsemen-production-status-5wsndb` until it is on `main`) or, once a release tag exists,
+  `git+https://github.com/wking53214/DRAFTER.git@<tag>`, and names no commit of this repository.
+- `drafter propose ... | head` died with a `BrokenPipeError` traceback and exit 1, which reads as "nothing to
+  propose". A closed output pipe now prints one line on stderr and exits 4, a code nothing else uses; the README and
+  the command's help document it.
+- The argparse parsers accept no abbreviated options (`allow_abbrev=False`): `--finding` is a usage error (exit 2)
+  instead of silently meaning `--findings`.
+- The 0.2.3 entry below said the job installs `numpy==2.5.4`; that was true only for Python 3.12 and 3.13.
+
 ## [0.2.3] - 2026-10-21
 
 ### Changed
@@ -13,7 +44,7 @@ below are the ones `pyproject.toml` declared.
 - Warden is re-pinned from `ec551d8` (0.13.1) to the full commit `9d9a71d1bc3195f0abd9aee8fe553cc09838b684`
   (Warden 0.13.2; untagged). The pin comment says so, and `tests/test_warden_pin.py` checks it against the installed
   release. `pip install -e ".[dev]"` resolves and `pip check` is clean, with no `--no-deps` step.
-- The `integration` job's sibling checkouts moved to the newest tested set: ghost_tools `5d7a386` (1.10.1), JUDGE
+- The `integration` job's sibling checkouts moved to a tested set: ghost_tools `5d7a386` (1.10.1), JUDGE
   `51a58c0` (0.4.2), SWIZZLE `123d7ab` (0.8.1), ASSAY `7b781cf` (0.11.1). Each comment states the package version
   that was checked.
 

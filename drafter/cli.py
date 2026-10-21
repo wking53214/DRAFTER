@@ -10,20 +10,24 @@ would propose for a folder and why it left other findings alone.
 EXIT CODES
     0  a proposal was made (printed as JSON on stdout)
     1  nothing to propose (the JSON still lists why findings were skipped)
-    2  usage error: unknown option, or PATH is not a folder
+    2  usage error: unknown option (options are not abbreviated), or PATH is not a folder
     3  findings could not be obtained: Ghost Tools could not run, or the findings
        file is unreadable. This is "unknown", never "nothing to propose".
+    4  the output pipe was closed before the report was written (for example `| head`). The
+       report was not delivered, so this is "unknown", never "nothing to propose".
 
 Nothing is written. Findings come from a saved Ghost JSON (`--findings`) or from
-Warden's own read-only Ghost scan, which needs `--ghost-root` (Warden 0.13.2 refuses a scan with no root, and an
+Warden's own read-only Ghost scan, which needs `--ghost-root` (Warden 0.13.3 refuses a scan with no root, and an
 installed Ghost Tools never stands in for one: exit 3).
 """
 
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any, Optional, Sequence
@@ -34,7 +38,7 @@ from warden.models import Transformation, defects_from_ghost
 from . import __version__
 from .seat import Drafter
 
-EXIT_PROPOSED, EXIT_NOTHING, EXIT_USAGE, EXIT_NO_FINDINGS = 0, 1, 2, 3
+EXIT_PROPOSED, EXIT_NOTHING, EXIT_USAGE, EXIT_NO_FINDINGS, EXIT_PIPE_CLOSED = 0, 1, 2, 3, 4
 
 _BASELINE = "drafter-dry-run"
 
@@ -42,14 +46,16 @@ _BASELINE = "drafter-dry-run"
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="drafter",
+        allow_abbrev=False,
         description="The in-loop maker. Proposes one fix for a Ghost Tools finding, as data. Never writes.",
-        epilog="exit codes: 0 proposal made, 1 nothing to propose, 2 usage error, 3 findings could not be obtained",
+        epilog="exit codes: 0 proposal made, 1 nothing to propose, 2 usage error, 3 findings could not be obtained, "
+               "4 output pipe closed",
     )
     parser.add_argument("--version", action="version", version=f"drafter {__version__}")
     sub = parser.add_subparsers(dest="command", metavar="COMMAND")
     sub.required = True
     propose = sub.add_parser(
-        "propose", help="dry run: print the edit the Drafter would propose for a folder, as JSON",
+        "propose", allow_abbrev=False, help="dry run: print the edit the Drafter would propose for a folder, as JSON",
         description="Read-only. Prints the proposed edits and the reasons findings were skipped, as JSON.")
     propose.add_argument("path", metavar="PATH", help="the folder Ghost Tools scanned")
     source = propose.add_mutually_exclusive_group()
@@ -115,7 +121,20 @@ def _propose(args: argparse.Namespace) -> int:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = _parser().parse_args(argv)       # argparse exits with 2 on a usage error, and 0 after --version
     _configure_logging(getattr(args, "verbose", 0))
-    return _propose(args)
+    try:
+        code = _propose(args)
+        sys.stdout.flush()
+    except BrokenPipeError:
+        # The reader went away (`drafter propose ... | head`). Point stdout at devnull so the interpreter's own
+        # flush at exit cannot raise again, and say so with a code that is not "nothing to propose" (1).
+        try:
+            with io.FileIO(os.devnull, "wb") as null:      # the null device: nothing is written anywhere
+                os.dup2(null.fileno(), sys.stdout.fileno())
+        except (OSError, ValueError, AttributeError):     # stdout has no file descriptor (it is not a real stream)
+            pass
+        print("drafter: the output pipe was closed before the report was written", file=sys.stderr)
+        return EXIT_PIPE_CLOSED
+    return code
 
 
 if __name__ == "__main__":

@@ -68,19 +68,19 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           repository: wking53214/JUDGE
-          ref: 51a58c01e55686c1c16a634dddd1a569cf1a98df  # tested set, package version 0.4.2
+          ref: 50f90f47660916d99deeb11370dd57bf85922dbe  # tested set, package version 0.4.3
           path: circuit/JUDGE
           token: ${{ secrets.CIRCUIT_TOKEN || github.token }}
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           repository: wking53214/SWIZZLE
-          ref: 123d7aba5d91896b6c9b381c8b0de4c89365ab81  # tested set, package version 0.8.1
+          ref: 8166c47f321ecfb66b8efa72c1deac5d954e8e48  # tested set, package version 0.8.1
           path: circuit/SWIZZLE
           token: ${{ secrets.CIRCUIT_TOKEN || github.token }}
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           repository: wking53214/ASSAY
-          ref: 7b781cf9cb2bbc3748aaff4343d778c64dc20d8c  # tested set, package version 0.11.1
+          ref: 4c415567d1c1cb2c1a9e8f343a7a11a5064258c8  # tested set, package version 0.11.1
           path: circuit/ASSAY
           token: ${{ secrets.CIRCUIT_TOKEN || github.token }}
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
@@ -93,8 +93,9 @@ jobs:
       - run: pip install -e ".[dev]"
       # ASSAY's answer key needs numpy and matplotlib: without them its verifier skips those claims and, from
       # ASSAY 0.11.1, exits 1 (the key is then not proven and the scanner is not graded). Exact versions, so a new
-      # release cannot move the result.
-      - run: pip install numpy==2.5.4 matplotlib==3.11.2
+      # release cannot move the result. numpy 2.5.x requires Python 3.12 or newer (on 3.11 pip offers nothing past
+      # 2.4.6), so the pin is per interpreter, by environment marker. matplotlib 3.11.2 installs on all three.
+      - run: pip install "numpy==2.4.6; python_version < '3.12'" "numpy==2.5.4; python_version >= '3.12'" matplotlib==3.11.2
       - name: The circuit is importable
         run: python -c "import ghost_buster, judge.seat, swizzle, assay_production; print('circuit importable')"
       - name: Full suite
