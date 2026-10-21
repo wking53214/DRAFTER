@@ -17,8 +17,8 @@ EXIT CODES
        report was not delivered, so this is "unknown", never "nothing to propose".
 
 Nothing is written. Findings come from a saved Ghost JSON (`--findings`) or from
-Warden's own read-only Ghost scan, which needs `--ghost-root` (Warden 0.13.3 refuses a scan with no root, and an
-installed Ghost Tools never stands in for one: exit 3).
+Warden's own read-only Ghost scan, which needs `--ghost-root` (Warden 0.13.3 and later refuse a scan with no root,
+and an installed Ghost Tools never stands in for one: exit 3).
 """
 
 from __future__ import annotations

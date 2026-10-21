@@ -140,7 +140,10 @@ def test_a_ghost_that_cannot_run_is_exit_3_not_exit_1(tmp_path, capsys, monkeypa
 
 
 def test_a_scan_with_no_ghost_root_is_refused_by_warden_and_is_exit_3(tmp_path, capsys):
-    """Warden 0.13.3 will not scan with no named root (an installed Ghost never stands in). That is exit 3, not 1."""
+    """Warden 0.13.3 and later will not scan with no named root (an installed Ghost never stands in).
+
+    That is exit 3, not 1.
+    """
     assert main(["propose", str(_tree(tmp_path))]) == EXIT_NO_FINDINGS
     captured = capsys.readouterr()
     assert captured.out == ""

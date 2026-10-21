@@ -30,7 +30,8 @@ def test_an_installed_copy_reports_the_same_version():
 
 def test_the_changelog_leads_with_the_current_version():
     headings = re.findall(r"^## \[([^\]]+)\]", CHANGELOG, re.MULTILINE)
-    assert headings[0] == drafter.__version__, headings
+    # An [Unreleased] heading may sit above the current version, and nothing else may.
+    assert headings[headings[0] == "Unreleased"] == drafter.__version__, headings
     assert "Unreleased" not in headings[:1] or headings[1] == drafter.__version__
     assert len(headings) == len(set(headings))
 

@@ -6,6 +6,19 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [Unreleased]
+
+### Changed
+
+- The `integration` job's sibling checkouts moved to the current set: ASSAY from `4c41556` (0.11.1, now off its
+  `main`) to `b6b1ccf1feb39993e50d38b875cd52ff0bd38039` (0.11.2, the squash-merge commit of the ASSAY work on its
+  `main`, tree identical to its branch head `023589f`), JUDGE to `1e77209e8a64edf95f2a1b50195526fa37c9e5de` (0.4.5),
+  ghost_tools to `aa72c38294acac1da4c32a2752f0db58e2b07248` (1.10.3) and SWIZZLE to
+  `ec7543cb10f9b78926e38e819c906721520dc052` (0.8.2). The whole suite passed against exactly this set on Python 3.11
+  and 3.13 with zero skips. The Warden pin is unchanged.
+- Text only: the `drafter/cli.py` docstring and one test docstring now say "Warden 0.13.3 and later" refuse a Ghost
+  scan with no root, which is what Warden 0.13.3 and 0.13.4 both do.
+
 ## [0.2.5] - 2026-10-21
 
 ### Changed
