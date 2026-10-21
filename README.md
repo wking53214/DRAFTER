@@ -8,7 +8,7 @@ The in-loop maker. It reads what Ghost Tools found and proposes one fix at a tim
 
 One of seven repositories in a stack that improves code under human control. Drafter has one job: given a Ghost Tools finding, return the change that would close it, as data. [Warden](https://github.com/wking53214/Warden) runs the loop around it. Warden asks Drafter for a change, checks a person granted it, runs the target's tests, applies the change, runs the tests again, and has Ghost look again. Drafter is then asked again, until it has nothing left to propose.
 
-Version `0.2.2`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Both are pinned to full commits in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
+Version `0.2.3`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Both are pinned to full commits in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
 
 ## WHAT IT DOES NOT OWN
 
@@ -96,10 +96,12 @@ For a person who wants to see what it would propose without running the loop, th
 ```bash
 drafter --version
 drafter propose PATH --findings ghost.json     # findings from a saved Ghost JSON report
-drafter propose PATH --ghost-root GHOST_TOOLS  # or Warden's own read-only Ghost scan
+drafter propose PATH --ghost-root GHOST_TOOLS  # or Warden's own read-only Ghost scan, which needs a named root
 drafter propose PATH ... --scope documentation # as Warden sets it from the grant
 drafter propose PATH ... -v                    # -v logs INFO to stderr, -vv adds refusals and tracebacks
 ```
+
+With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.2 refuses a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so.
 
 It prints one JSON object on stdout: `proposal` (the intent, scope, affected files and every edit with its `old`
 and `new` text, or `null`) and `skipped` (each finding Drafter recognised but left alone, with the reason). It
@@ -131,7 +133,7 @@ Warden calls `Drafter.propose` once per cycle and stops calling it when it retur
 - Seated in the whole circuit (Ghost, SWIZZLE, ASSAY, Judge and Burnish all live, through `warden tagteam --stack`), a dead function is commented out under a `code` grant and skipped with a reason under a `documentation` grant; both runs end `ACCEPT`, exit 0. **VERIFIED** by hand on 2026-10-14 on a scratch repository; recorded in Warden's `docs/REGISTRY.json`.
 - It imports only the modules named under "Important boundaries", never writes, never counts. **VERIFIED** by `tests/test_independence.py`.
 
-Test totals are not written here, because a number in prose goes stale; run `pytest -q -rs` to see the current ones and the reason for every skip. Without Ghost Tools on the import path, the tests that need the real Ghost scan skip with the reason "the real Ghost scan needs ghost_buster on PYTHONPATH"; the tests that run the full gate also need SWIZZLE and ASSAY checkouts beside this one (folder names matched without regard to case, or point `CIRCUIT_ROOT` at the folder that holds them) and the Judge importable, and skip and say so otherwise. Nothing else skips. CI runs both ways: the `pytest` job is the fast standalone run on Python 3.11, 3.12 and 3.13, and the `integration` job checks out the four siblings at the full commits written in `.github/workflows/tests.yml`, runs everything, and fails if even one test skips. `ruff check .` and `mypy` (strict, configured in `pyproject.toml`) are also CI gates.
+Test totals are not written here, because a number in prose goes stale; run `pytest -q -rs` to see the current ones and the reason for every skip. Without Ghost Tools on the import path, the tests that need the real Ghost scan skip with the reason "the real Ghost scan needs ghost_buster on PYTHONPATH"; the tests that run the full gate also need SWIZZLE and ASSAY checkouts beside this one (folder names matched without regard to case, or point `CIRCUIT_ROOT` at the folder that holds them) and the Judge importable, and skip and say so otherwise. ASSAY's answer key also needs `numpy==2.5.4` and `matplotlib==3.11.2` installed wherever it is graded (the `integration` job installs them; ASSAY 0.11.1 exits 1 when a claim is skipped). Nothing else skips. CI runs both ways: the `pytest` job is the fast standalone run on Python 3.11, 3.12 and 3.13, and the `integration` job checks out the four siblings at the full commits written in `.github/workflows/tests.yml`, runs everything, and fails if even one test skips. `ruff check .` and `mypy` (strict, configured in `pyproject.toml`) are also CI gates.
 
 ### Testing against the pin
 
@@ -185,7 +187,7 @@ The README says Drafter never writes and never measures. The tests read its sour
 
 ## Status
 
-Experimental, version 0.2.2, maintained by one person. Changes are listed in `CHANGELOG.md`. An older tag, `v0.10.0`, exists in this repository from earlier numbering and does not correspond to this version. Releases of this version are not tagged yet; tagging is the owner's decision.
+Experimental, version 0.2.3, maintained by one person. Changes are listed in `CHANGELOG.md`. An older tag, `v0.10.0`, exists in this repository from earlier numbering and does not correspond to this version. Releases of this version are not tagged yet; tagging is the owner's decision.
 
 ## Support
 

@@ -130,6 +130,21 @@ def test_a_ghost_that_cannot_run_is_exit_3_not_exit_1(tmp_path, capsys, monkeypa
     assert "Ghost crashed" in err and "--findings" in err
 
 
+def test_a_scan_with_no_ghost_root_is_refused_by_warden_and_is_exit_3(tmp_path, capsys):
+    """Warden 0.13.2 will not scan with no named root (an installed Ghost never stands in). That is exit 3, not 1."""
+    assert main(["propose", str(_tree(tmp_path))]) == EXIT_NO_FINDINGS
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "no root" in captured.err and "--ghost-root" in captured.err
+
+
+def test_a_ghost_root_that_does_not_hold_the_package_is_exit_3(tmp_path, capsys):
+    empty = tmp_path / "not_ghost"
+    empty.mkdir()
+    assert main(["propose", str(_tree(tmp_path)), "--ghost-root", str(empty)]) == EXIT_NO_FINDINGS
+    assert "could not obtain findings" in capsys.readouterr().err
+
+
 def test_verbose_shows_a_refusal_on_stderr_and_default_is_quiet(tmp_path, capsys):
     root = _tree(tmp_path)
     findings = _findings(tmp_path, dead_finding(name="no_such_name", start=1, end=2))

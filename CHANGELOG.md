@@ -6,6 +6,27 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.3] - 2026-10-21
+
+### Changed
+
+- Warden is re-pinned from `ec551d8` (0.13.1) to the full commit `9d9a71d1bc3195f0abd9aee8fe553cc09838b684`
+  (Warden 0.13.2; untagged). The pin comment says so, and `tests/test_warden_pin.py` checks it against the installed
+  release. `pip install -e ".[dev]"` resolves and `pip check` is clean, with no `--no-deps` step.
+- The `integration` job's sibling checkouts moved to the newest tested set: ghost_tools `5d7a386` (1.10.1), JUDGE
+  `51a58c0` (0.4.2), SWIZZLE `123d7ab` (0.8.1), ASSAY `7b781cf` (0.11.1). Each comment states the package version
+  that was checked.
+
+### Fixed
+
+- Warden 0.13.2 refuses a Ghost scan with no instrument root and never lets an installed Ghost Tools stand in for
+  one. `drafter propose PATH` with neither `--findings` nor `--ghost-root` therefore exits 3 (findings could not be
+  obtained), where its help, module docstring and README still described a default scan. Those texts now say that a
+  named root is needed. New tests cover the no-root refusal and a root that does not hold the package; both end in
+  exit 3, never exit 1.
+- The `integration` job now installs `numpy==2.5.4` and `matplotlib==3.11.2`. ASSAY 0.11.1 exits 1 on a skipped
+  claim, and its answer key needs both; Warden's CI installs the same two versions.
+
 ## [0.2.2] - 2026-10-17
 
 ### Fixed

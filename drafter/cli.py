@@ -15,7 +15,8 @@ EXIT CODES
        file is unreadable. This is "unknown", never "nothing to propose".
 
 Nothing is written. Findings come from a saved Ghost JSON (`--findings`) or from
-Warden's own read-only Ghost scan (needs Ghost Tools importable, or `--ghost-root`).
+Warden's own read-only Ghost scan, which needs `--ghost-root` (Warden 0.13.2 refuses a scan with no root, and an
+installed Ghost Tools never stands in for one: exit 3).
 """
 
 from __future__ import annotations
@@ -53,9 +54,9 @@ def _parser() -> argparse.ArgumentParser:
     propose.add_argument("path", metavar="PATH", help="the folder Ghost Tools scanned")
     source = propose.add_mutually_exclusive_group()
     source.add_argument("--findings", metavar="FILE", type=Path,
-                        help="a saved Ghost Tools JSON report (default: run Warden's read-only Ghost scan)")
+                        help="a saved Ghost Tools JSON report, instead of a scan (with neither option: exit 3)")
     source.add_argument("--ghost-root", metavar="DIR", type=Path,
-                        help="the folder that holds the ghost_buster package, if it is not importable")
+                        help="a Ghost Tools checkout (the folder holding the ghost_buster package) to scan with")
     propose.add_argument("--scope", choices=("code", "documentation"), default=None,
                          help="the grant's scope, as Warden would set it (default: any)")
     propose.add_argument("-v", "--verbose", action="count", default=0,
