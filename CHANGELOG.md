@@ -6,18 +6,29 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
-## [Unreleased]
+## [0.2.6] - 2026-10-21
 
 ### Changed
 
-- The `integration` job's sibling checkouts moved to the current set: ASSAY from `4c41556` (0.11.1, now off its
-  `main`) to `b6b1ccf1feb39993e50d38b875cd52ff0bd38039` (0.11.2, the squash-merge commit of the ASSAY work on its
-  `main`, tree identical to its branch head `023589f`), JUDGE to `1e77209e8a64edf95f2a1b50195526fa37c9e5de` (0.4.5),
-  ghost_tools to `aa72c38294acac1da4c32a2752f0db58e2b07248` (1.10.3) and SWIZZLE to
-  `ec7543cb10f9b78926e38e819c906721520dc052` (0.8.2). The whole suite passed against exactly this set on Python 3.11
-  and 3.13 with zero skips. The Warden pin is unchanged.
-- Text only: the `drafter/cli.py` docstring and one test docstring now say "Warden 0.13.3 and later" refuse a Ghost
-  scan with no root, which is what Warden 0.13.3 and 0.13.4 both do.
+- Merged `origin/main` (`41ec214`, pull request #13) into this branch with a merge commit. Its two changed files,
+  `README.md` and `pyproject.toml`, conflicted; both were resolved by keeping this branch's side (the install-file
+  instructions, the full-commit pins with tag comments, the Python 3.13 classifier), so main's Warden `72e5745` and
+  CNS tag spellings are superseded by the pins below.
+- CNS is re-pinned from `5252ceebe98185f7be81212d988055ccf9884568` (v1.8.0) to the full commit
+  `da18e411743d4e3b0e783105394d845fb1c16746` (v1.9.0). It stays a full commit, not the tag, because pip treats a tag URL
+  and a commit URL as two sources.
+- Warden is re-pinned from `36e98433f4928b7d12905f02b56e55ee1943b56e` (0.13.4) to the full commit
+  `decc3c3b5af479ad0eef3df4d66dbcb21e90897c` (Warden 0.13.5; untagged). That Warden requires the same CNS commit.
+- The `integration` job's sibling checkouts: ASSAY `01c713a316dc0513d30e566fffe4d94536888e81` (0.11.2, the head of its
+  `main`), JUDGE `1e77209e8a64edf95f2a1b50195526fa37c9e5de` (0.4.5), ghost_tools
+  `aa72c38294acac1da4c32a2752f0db58e2b07248` (1.10.3) and SWIZZLE `ec7543cb10f9b78926e38e819c906721520dc052` (0.8.2).
+  Only the ASSAY ref changed in this re-pin; it replaces `b6b1ccf`, which is not the head of ASSAY `main`.
+
+### Fixed
+
+- Text only: the README said Warden 0.13.3 refuses a Ghost scan with no named root. That refusal first appears in Warden
+  0.13.2, so the README, the `drafter/cli.py` docstring and one test docstring now say "0.13.2 and later". The README
+  also says the git-checkout and site-packages requirement is Warden 0.13.4 and later, and that the pin is 0.13.5.
 
 ## [0.2.5] - 2026-10-21
 
