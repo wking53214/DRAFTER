@@ -158,3 +158,15 @@ def test_the_first_finding_it_cannot_use_does_not_hide_the_next(tmp_path):
     proposal = drafter.propose(root, defects_from_ghost([bad, good]), "base")
     assert proposal.known_defects[0].ghost_id == "ghost-good"
     assert drafter.last_skipped[0][0] == "ghost-bad"
+
+
+@pytest.mark.parametrize("detector", [None, "", 5])
+def test_a_finding_with_no_usable_detector_is_recorded_not_dropped(tmp_path, detector):
+    """A finding of a kind with no fixer is not listed; a finding that names no kind at all is, so the reason
+    for 'no proposal' is never an empty list."""
+    root = _root(tmp_path, **{"m.py": SRC})
+    drafter = Drafter()
+    bad = _defect(detector=detector)
+    assert drafter.propose(root, [bad], "base") is None
+    ((fid, reason),) = drafter.last_skipped
+    assert fid == "ghost-x" and "names no detector" in reason

@@ -235,3 +235,64 @@ def test_the_real_ghost_scan_feeds_the_dry_run(tmp_path, capsys):
     assert code == EXIT_PROPOSED, report
     assert report["proposal"]["affected_files"] == ["README.md"]
     assert _snapshot(root) == before
+
+
+# A record that cannot be acted on must say why in the report. Before 0.2.8 `[{"id":"x"}]` printed
+# `"findings": 1, "proposal": null, "skipped": []` and exit 1, so the report could not say why.
+
+NO_DETECTOR = "names no detector"
+
+
+@pytest.mark.parametrize("record", [{"id": "x"}, {"id": "x", "detector": ""}, {"id": "x", "detector": None},
+                                    {"id": "x", "detector": 5}, {"id": "x", "detector": ["dead_code"]}],
+                         ids=["missing", "empty", "null", "number", "list"])
+def test_a_record_with_no_usable_detector_is_skipped_with_a_reason(tmp_path, capsys, record):
+    code = main(["propose", str(_tree(tmp_path)), "--findings", str(_findings(tmp_path, record))])
+    report = json.loads(capsys.readouterr().out)
+    assert code == EXIT_NOTHING                      # the exit-code table is unchanged: 1, and the JSON says why
+    assert report["findings"] == 1 and report["proposal"] is None
+    ((entry,),) = [report["skipped"]]
+    assert entry["finding"] == "x" and NO_DETECTOR in entry["reason"]
+
+
+def test_a_kind_of_finding_with_no_fixer_is_still_not_listed(tmp_path, capsys):
+    """Only a record that names no kind is reported. A finding for a detector Drafter has no fixer for is not
+    its business, as the README says, and stays out of `skipped`."""
+    record = {"id": "x", "detector": "some_other_detector"}
+    code = main(["propose", str(_tree(tmp_path)), "--findings", str(_findings(tmp_path, record))])
+    report = json.loads(capsys.readouterr().out)
+    assert code == EXIT_NOTHING and report["findings"] == 1 and report["skipped"] == []
+
+
+@pytest.mark.parametrize("field, value", [("evidence", "not an object"), ("attributes", 3), ("evidence", ["a"])])
+def test_a_record_of_the_wrong_shape_is_skipped_not_a_traceback(tmp_path, capsys, field, value):
+    """Warden's reader raises on these. That used to escape as a traceback with exit 1, which reads as 'nothing
+    to propose'."""
+    bad = dead_finding(fid="ghost-bad")
+    bad[field] = value
+    code = main(["propose", str(_tree(tmp_path)), "--findings", str(_findings(tmp_path, bad))])
+    captured = capsys.readouterr()
+    report = json.loads(captured.out)
+    assert code == EXIT_NOTHING and "Traceback" not in captured.err
+    assert report["findings"] == 1 and report["proposal"] is None
+    ((entry,),) = [report["skipped"]]
+    assert "could not be read" in entry["reason"]
+
+
+def test_a_bad_record_does_not_stop_the_good_one_after_it(tmp_path, capsys):
+    bad = {"id": "bad", "detector": "doc_test_count_drift", "evidence": "not an object"}
+    good = doc_finding(line=3)
+    code = main(["propose", str(_tree(tmp_path)), "--findings", str(_findings(tmp_path, bad, {"id": "x"}, good))])
+    report = json.loads(capsys.readouterr().out)
+    assert code == EXIT_PROPOSED and report["findings"] == 3
+    assert report["proposal"]["affected_files"] == ["README.md"]
+    assert any("could not be read" in s["reason"] for s in report["skipped"])
+    assert any(s["finding"] == "x" and NO_DETECTOR in s["reason"] for s in report["skipped"])
+
+
+def test_the_exit_code_table_in_the_readme_is_the_one_the_code_has():
+    """The README table must keep saying exit 1 covers a skipped finding, since a malformed record exits 1."""
+    readme = (REPO / "README.md").read_text(encoding="utf-8")
+    rows = dict(re.findall(r"^\| (\d) \| (.+) \|$", readme, re.MULTILINE))
+    assert set(rows) == {"0", "1", "2", "3", "4"}
+    assert "nothing to propose" in rows["1"] and "why findings were skipped" in rows["1"]

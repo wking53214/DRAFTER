@@ -43,8 +43,10 @@ class Drafter:
     `last_skipped` lists, for the latest `propose` call, every finding the
     Drafter recognised but would not (or could not) act on, as
     `(finding id, reason)`. A finding of a kind it has no fixer for is not
-    listed; it was never its business. Warden reads `describe_skipped()` after
-    every call and prints it as `drafter_skipped`; `drafter propose` prints it too.
+    listed; it was never its business. A record that names no kind at all (no
+    usable `detector`) is listed, so that it cannot pass for a clean tree.
+    Warden reads `describe_skipped()` after every call and prints it as
+    `drafter_skipped`; `drafter propose` prints it too.
     """
 
     #: The seat contract this Drafter was written against. Warden warns when it is missing and refuses a mismatch.
@@ -95,6 +97,11 @@ class Drafter:
             detector = getattr(defect, "detector", None)
             fixer = self.fixers.get(detector) if isinstance(detector, str) else None
             if fixer is None:
+                if not (isinstance(detector, str) and detector):
+                    # A finding of a kind with no fixer is not Drafter's business and is not listed. A record that
+                    # names no kind at all is different: say so, or the report cannot tell it from a clean tree.
+                    self._skip(finding_id(defect), "the finding names no detector (it is missing, empty or not text), "
+                                                   "so Drafter cannot tell what kind of finding it is")
                 continue
             fid = finding_id(defect)
             hint = self.scope_of(defect)

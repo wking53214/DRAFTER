@@ -87,6 +87,28 @@ def _proposal_json(proposal: Transformation) -> dict[str, Any]:
     }
 
 
+def _defects(found: Sequence[dict[str, Any]]) -> Sequence[Any]:
+    """Ghost's records as Warden's `Defect` rows. A record of the wrong shape must not end the run.
+
+    Warden converts the whole list at once, and one record whose field has the wrong type (an `evidence` that is
+    not an object, an `attributes` that is not a mapping) makes it raise. The records are then converted one at a
+    time and a record that still fails is passed on as it is, so `Drafter.propose` lists it as skipped, with the
+    reason, and the others are still read.
+    """
+    rows: list[Any] = []
+    try:
+        rows.extend(defects_from_ghost(found))
+        return rows
+    except (AttributeError, TypeError, ValueError):
+        rows.clear()
+    for record in found:
+        try:
+            rows.extend(defects_from_ghost([record]))
+        except (AttributeError, TypeError, ValueError):
+            rows.append(record)
+    return rows
+
+
 def _propose(args: argparse.Namespace) -> int:
     target = Path(args.path)
     if not target.is_dir():
@@ -98,7 +120,7 @@ def _propose(args: argparse.Namespace) -> int:
             found: Sequence[dict[str, Any]] = load_findings(args.findings)
         else:
             found = scan(target, ghost_tools_root=args.ghost_root)
-        observed = defects_from_ghost(found)
+        observed = _defects(found)
     except (OSError, ValueError, RuntimeError) as err:
         # Ghost's own errors (GhostCrashed, GhostRefused) are RuntimeErrors; a bad JSON file is a ValueError.
         log.debug("could not obtain findings", exc_info=True)
