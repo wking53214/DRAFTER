@@ -6,6 +6,20 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.7] - 2026-10-21
+
+### Changed
+
+- CNS is pinned by its release tag, `cns @ git+https://github.com/wking53214/CNS.git@v1.9.0` (the tag peels to
+  `da18e411743d4e3b0e783105394d845fb1c16746`), replacing the full-commit spelling, so the pin text matches Warden's own
+  CNS pin and the other repositories of the circuit (pip treats a tag URL and a commit URL as two sources).
+  `test_the_cns_dependency_is_pinned_to_a_full_commit` asserted the old spelling and now asserts the tag spelling.
+- Warden is re-pinned from `decc3c3b5af479ad0eef3df4d66dbcb21e90897c` (0.13.5) to the full commit
+  `0c1ea567f0b69586cfd735f82260774aec9552bb` (Warden 0.13.6; untagged). The README sentence naming the pinned Warden
+  says 0.13.6.
+- The `integration` job's ASSAY checkout is `54248beb5a36600f69de7c816cb2271dda20a879` (0.11.2, the head of its
+  `main`), replacing `01c713a316dc0513d30e566fffe4d94536888e81`.
+
 ## [0.2.6] - 2026-10-21
 
 ### Changed
