@@ -6,6 +6,50 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.8] - 2026-10-21
+
+### Changed
+
+- Warden is re-pinned from `0c1ea567f0b69586cfd735f82260774aec9552bb` (0.13.6) to the full commit
+  `1636e1a21f124eedbf6e158db95dc75344f4308d` (Warden 0.13.7; untagged). The README sentence naming the pinned Warden
+  says 0.13.7. The `Warden.git` spelling and the CNS tag pin `@v1.9.0` are unchanged.
+- The `integration` job's sibling checkouts move to the heads of the sibling `main` branches, which are also the
+  commits the CNS stack manifest records: ghost_tools `c2ada82d2f6c0404074a668ba749c7872743aad9` (1.10.5, was
+  `aa72c38`, 1.10.3), SWIZZLE `6bd88f3a6e9de1f83e64f401e13cbcb5233499fc` (0.8.4, was `ec7543c`, 0.8.2), JUDGE
+  `cf71fb468d483e868834c8c06b650a5d60726967` (0.4.7, was `1e77209`, 0.4.5). ASSAY stays at `54248beb` (0.11.2). The
+  comments beside the refs and above them say what the pins are. The earlier entries below name the sets that were
+  current at the time and are left as written; the 0.2.5 line that calls JUDGE `f26db68` "the head of its branch,
+  which the stack manifest set moves to" described that day only.
+- README Install: the CNS install file is on CNS `main`, so the instruction to use a CNS branch "until that is on
+  `main`" is gone, and the sentence that said this repository's `main` "still holds the 0.1.0 code" (no longer true:
+  `main` has the command line) is replaced by what is true: `main` moves and nothing there says it was tested with
+  the other repositories.
+
+### Fixed
+
+- A findings record that names no usable `detector` (missing, empty, null or not text) is now listed in `skipped`
+  with the reason "the finding names no detector (it is missing, empty or not text), so Drafter cannot tell what kind
+  of finding it is". Before, `drafter propose PATH --findings F` with `[{"id":"x"}]` printed `findings: 1`,
+  `proposal: null`, `skipped: []` and exited 1, so the report could not say why. A finding for a detector Drafter has
+  no fixer for is still not listed (that is not its business). The same reason reaches Warden's `drafter_skipped`.
+- A record whose fields have the wrong type (for example `evidence` that is not an object, or `attributes` that is
+  not a mapping) made Warden's reader raise inside `drafter propose`; the traceback escaped with exit 1, which reads
+  as "nothing to propose". The record is now passed to the Drafter as it is, which lists it as "a finding could not
+  be read (...)", and the records after it are still read.
+- The exit-code table in the README is unchanged and stays true: a malformed record exits 1 and the JSON lists why
+  (row 1 already says "the JSON still lists why findings were skipped"); exit 3 stays for findings that cannot be
+  obtained at all. A test holds the table to that wording.
+- Text only: the 0.2.7 entry cited `test_the_cns_dependency_is_pinned_to_a_full_commit` as if it were current; it now
+  says that test was renamed `test_the_cns_dependency_is_pinned_to_its_release_tag`.
+
+### Tests
+
+- Added tests for both malformed-record cases (`tests/test_cli.py`, `tests/test_odd_input.py`).
+- Edited under the repository rule that a test asserting a changed behaviour may be updated: only a rename.
+  `test_cns_is_pinned_to_the_same_commit_as_wardens_own_cns_pin` is now
+  `test_the_cns_pin_text_equals_wardens_own_cns_requirement`, with a docstring that says it compares pin text (a
+  tag). Its assertion is unchanged. Caused by the README and test slips step.
+
 ## [0.2.7] - 2026-10-21
 
 ### Changed
