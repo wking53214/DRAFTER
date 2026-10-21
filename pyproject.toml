@@ -27,7 +27,7 @@ classifiers = [
 # To bump: see "Bumping the pins" in README.md.
 dependencies = [
     "warden @ git+https://github.com/wking53214/Warden.git@36e98433f4928b7d12905f02b56e55ee1943b56e",  # untagged commit, Warden 0.13.4
-    "cns @ git+https://github.com/wking53214/CNS.git@5252ceebe98185f7be81212d988055ccf9884568",  # v1.8.0
+    "cns @ git+https://github.com/wking53214/CNS.git@da18e411743d4e3b0e783105394d845fb1c16746",  # v1.9.0
 ]
 
 [project.urls]
