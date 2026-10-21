@@ -56,10 +56,10 @@ def test_the_readme_does_not_restate_the_pinned_versions():
     assert "0.11.5" not in pyproject_text, "the pin comment names a version the pin is not"
 
 
-def test_the_cns_dependency_is_pinned_to_a_full_commit():
+def test_the_cns_dependency_is_pinned_to_its_release_tag():
     deps = PYPROJECT["project"]["dependencies"]
     (cns,) = [d for d in deps if d.startswith("cns @ ")]
-    assert re.fullmatch(r"cns @ git\+https://github\.com/wking53214/CNS\.git@[0-9a-f]{40}", cns), cns
+    assert re.fullmatch(r"cns @ git\+https://github\.com/wking53214/CNS\.git@v\d+\.\d+\.\d+", cns), cns
 
 
 def test_the_workflow_sibling_checkouts_are_pinned_to_full_commits():
