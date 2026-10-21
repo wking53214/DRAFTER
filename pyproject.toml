@@ -26,7 +26,7 @@ classifiers = [
 # seat. The tag a commit corresponds to is named in a comment beside it where there is one.
 # To bump: see "Bumping the pins" in README.md.
 dependencies = [
-    "warden @ git+https://github.com/wking53214/Warden.git@36e98433f4928b7d12905f02b56e55ee1943b56e",  # untagged commit, Warden 0.13.4
+    "warden @ git+https://github.com/wking53214/Warden.git@decc3c3b5af479ad0eef3df4d66dbcb21e90897c",  # Warden 0.13.5, not tagged
     "cns @ git+https://github.com/wking53214/CNS.git@da18e411743d4e3b0e783105394d845fb1c16746",  # v1.9.0
 ]
 
