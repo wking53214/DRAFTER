@@ -42,8 +42,9 @@ jobs:
   # that seat the Drafter in Warden's full gate actually run. Zero skips is required: a skipped test here means
   # the circuit was not really there, and the job fails rather than report a green it did not earn.
   #
-  # The four siblings are checked out at the full commits of the tested set, never a branch. A pin that is one or
-  # more commits behind its repository's branch head is expected, and none of these commits carries a release tag.
+  # The four siblings are checked out at full commits, never a branch: today the heads of their `main` branches, the
+  # same commits the CNS stack manifest records. A pin may fall behind its repository's head later, and none of
+  # these commits carries a release tag.
   # To bump one, see "Bumping the pins" in README.md: put the new full 40-character commit after `ref:` and update
   # the version note beside it. The `static` and `pytest` jobs do not need them. If those repositories are private,
   # add a repository secret CIRCUIT_TOKEN (a read-only token for them).
@@ -62,19 +63,19 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           repository: wking53214/ghost_tools
-          ref: aa72c38294acac1da4c32a2752f0db58e2b07248  # tested set, package version 1.10.3
+          ref: c2ada82d2f6c0404074a668ba749c7872743aad9  # head of ghost_tools main, package version 1.10.5
           path: circuit/ghost_tools
           token: ${{ secrets.CIRCUIT_TOKEN || github.token }}
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           repository: wking53214/JUDGE
-          ref: 1e77209e8a64edf95f2a1b50195526fa37c9e5de  # tested set, package version 0.4.5
+          ref: cf71fb468d483e868834c8c06b650a5d60726967  # head of JUDGE main, package version 0.4.7
           path: circuit/JUDGE
           token: ${{ secrets.CIRCUIT_TOKEN || github.token }}
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           repository: wking53214/SWIZZLE
-          ref: ec7543cb10f9b78926e38e819c906721520dc052  # tested set, package version 0.8.2
+          ref: 6bd88f3a6e9de1f83e64f401e13cbcb5233499fc  # head of SWIZZLE main, package version 0.8.4
           path: circuit/SWIZZLE
           token: ${{ secrets.CIRCUIT_TOKEN || github.token }}
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
