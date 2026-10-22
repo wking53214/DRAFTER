@@ -119,7 +119,7 @@ writes nothing. Exit codes:
 | 1 | nothing to propose (the JSON still lists why findings were skipped) |
 | 2 | usage error: an unknown option (options are not abbreviated: `--finding` is refused), or PATH is not a folder |
 | 3 | findings could not be obtained (Ghost could not run, or the findings file is unreadable); this is unknown, never "nothing to propose" |
-| 4 | the output pipe was closed before the report was written (for example `drafter propose ... \| head`); the report was not delivered, so this is unknown, never "nothing to propose" |
+| 4 | the output pipe was closed before the report was written (for example `drafter propose ... \| head`), or stdout could not take it (a full device, or no stdout at all); one plain line on stderr says which; the report was not delivered, so this is unknown, never "nothing to propose" |
 
 `python -m drafter` is the same command. As a library, Drafter configures no logging; attach a handler to the
 `drafter` logger to see its warnings.

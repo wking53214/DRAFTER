@@ -13,8 +13,9 @@ EXIT CODES
     2  usage error: unknown option (options are not abbreviated), or PATH is not a folder
     3  findings could not be obtained: Ghost Tools could not run, or the findings
        file is unreadable. This is "unknown", never "nothing to propose".
-    4  the output pipe was closed before the report was written (for example `| head`). The
-       report was not delivered, so this is "unknown", never "nothing to propose".
+    4  the output pipe was closed before the report was written (for example `| head`), or stdout
+       could not take it (a full device, or no stdout at all). The report was not delivered, so
+       this is "unknown", never "nothing to propose".
 
 Nothing is written. Findings come from a saved Ghost JSON (`--findings`) or from
 Warden's own read-only Ghost scan, which needs `--ghost-root` (Warden 0.13.2 and later refuse a scan with no root,
@@ -49,7 +50,7 @@ def _parser() -> argparse.ArgumentParser:
         allow_abbrev=False,
         description="The in-loop maker. Proposes one fix for a Ghost Tools finding, as data. Never writes.",
         epilog="exit codes: 0 proposal made, 1 nothing to propose, 2 usage error, 3 findings could not be obtained, "
-               "4 output pipe closed",
+               "4 the report could not be delivered (output pipe closed, or stdout full or closed)",
     )
     parser.add_argument("--version", action="version", version=f"drafter {__version__}")
     sub = parser.add_subparsers(dest="command", metavar="COMMAND")
@@ -136,24 +137,39 @@ def _propose(args: argparse.Namespace) -> int:
         "proposal": _proposal_json(proposal) if proposal is not None else None,
         "skipped": [{"finding": fid, "reason": reason} for fid, reason in drafter.last_skipped],
     }
-    print(json.dumps(report, indent=2, sort_keys=True))
+    try:
+        print(json.dumps(report, indent=2, sort_keys=True))
+        sys.stdout.flush()
+    except BrokenPipeError:
+        raise                       # main() reports it, with its own message
+    except (OSError, AttributeError) as err:
+        # stdout is full (ENOSPC) or unwritable, or it is closed (sys.stdout is None, so flush raises AttributeError).
+        # The report was not delivered: say so on stderr, plainly, with the code that is not "nothing to propose".
+        why = "stdout is closed" if sys.stdout is None else f"{type(err).__name__}: {err}"
+        _silence_stdout()
+        print(f"drafter: the report could not be written to stdout ({why})", file=sys.stderr)
+        return EXIT_PIPE_CLOSED
     return EXIT_PROPOSED if proposal is not None else EXIT_NOTHING
+
+
+def _silence_stdout() -> None:
+    """Point stdout at the null device so the interpreter's own flush at exit cannot raise again."""
+    try:
+        with io.FileIO(os.devnull, "wb") as null:      # the null device: nothing is written anywhere
+            os.dup2(null.fileno(), sys.stdout.fileno())
+    except (OSError, ValueError, AttributeError):     # stdout has no file descriptor (it is not a real stream)
+        pass
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = _parser().parse_args(argv)       # argparse exits with 2 on a usage error, and 0 after --version
     _configure_logging(getattr(args, "verbose", 0))
     try:
-        code = _propose(args)
-        sys.stdout.flush()
+        code = _propose(args)           # prints and flushes the report itself
     except BrokenPipeError:
         # The reader went away (`drafter propose ... | head`). Point stdout at devnull so the interpreter's own
         # flush at exit cannot raise again, and say so with a code that is not "nothing to propose" (1).
-        try:
-            with io.FileIO(os.devnull, "wb") as null:      # the null device: nothing is written anywhere
-                os.dup2(null.fileno(), sys.stdout.fileno())
-        except (OSError, ValueError, AttributeError):     # stdout has no file descriptor (it is not a real stream)
-            pass
+        _silence_stdout()
         print("drafter: the output pipe was closed before the report was written", file=sys.stderr)
         return EXIT_PIPE_CLOSED
     return code

@@ -226,6 +226,66 @@ def test_python_dash_m_drafter_into_a_closed_pipe_exits_4_cleanly(tmp_path):
     assert "output pipe was closed" in done.stderr
 
 
+class _FullDevice:
+    """A stdout whose device is full: the write or the flush fails with ENOSPC, as on /dev/full."""
+
+    def write(self, _text: str) -> int:
+        raise OSError(28, "No space left on device")
+
+    def flush(self) -> None:
+        raise OSError(28, "No space left on device")
+
+
+def test_a_full_stdout_is_exit_4_with_one_plain_line_not_a_traceback(tmp_path, capsys, monkeypatch):
+    """Before 0.2.9 the OSError escaped as a traceback and exit 1, which reads as "nothing to propose"."""
+    root = _tree(tmp_path)
+    findings = _findings(tmp_path, doc_finding(line=3))
+    monkeypatch.setattr(sys, "stdout", _FullDevice())
+    code = main(["propose", str(root), "--findings", str(findings)])
+    assert code == EXIT_PIPE_CLOSED and code not in (EXIT_NOTHING, EXIT_PROPOSED)
+    err = capsys.readouterr().err
+    assert "could not be written to stdout" in err and "No space left on device" in err
+    assert "Traceback" not in err and len(err.strip().splitlines()) == 1
+
+
+def test_a_closed_stdout_is_exit_4_with_one_plain_line_not_a_traceback(tmp_path, capsys, monkeypatch):
+    """With no stdout at all (`sys.stdout` is None) the flush used to raise AttributeError, exit 1."""
+    root = _tree(tmp_path)
+    findings = _findings(tmp_path, doc_finding(line=3))
+    monkeypatch.setattr(sys, "stdout", None)
+    code = main(["propose", str(root), "--findings", str(findings)])
+    assert code == EXIT_PIPE_CLOSED
+    err = capsys.readouterr().err
+    assert "could not be written to stdout" in err and "stdout is closed" in err
+    assert "Traceback" not in err and "AttributeError" not in err and len(err.strip().splitlines()) == 1
+
+
+def test_python_dash_m_drafter_with_stdout_on_a_full_device_exits_4_cleanly(tmp_path):
+    """The real thing: the child's stdout is /dev/full, opened for writing (never replaced, never an --out)."""
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(REPO), os.environ.get("PYTHONPATH", "")])}
+    root = _tree(tmp_path)
+    findings = _findings(tmp_path, doc_finding(line=3))
+    with open("/dev/full", "wb") as full:
+        done = subprocess.run([sys.executable, "-m", "drafter", "propose", str(root), "--findings", str(findings)],
+                              stdout=full, stderr=subprocess.PIPE, text=True, env=env, cwd=tmp_path, check=False)
+    assert done.returncode == EXIT_PIPE_CLOSED, done.stderr
+    assert "Traceback" not in done.stderr and "Exception ignored" not in done.stderr
+    assert "could not be written to stdout" in done.stderr and len(done.stderr.strip().splitlines()) == 1
+
+
+def test_python_dash_m_drafter_with_file_descriptor_1_closed_exits_4_cleanly(tmp_path):
+    """The real thing: the process starts with fd 1 closed, so `sys.stdout` is None (the report cannot go anywhere)."""
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(REPO), os.environ.get("PYTHONPATH", "")])}
+    root = _tree(tmp_path)
+    findings = _findings(tmp_path, doc_finding(line=3))
+    done = subprocess.run([sys.executable, "-m", "drafter", "propose", str(root), "--findings", str(findings)],
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env, cwd=tmp_path,
+                          check=False, preexec_fn=lambda: os.close(1))
+    assert done.returncode == EXIT_PIPE_CLOSED, done.stderr
+    assert "Traceback" not in done.stderr and "AttributeError" not in done.stderr
+    assert "could not be written to stdout" in done.stderr and len(done.stderr.strip().splitlines()) == 1
+
+
 def test_the_real_ghost_scan_feeds_the_dry_run(tmp_path, capsys):
     """Integration: no --findings file, Warden's own read-only Ghost scan finds the stale claim."""
     root = _tree(tmp_path)
@@ -296,3 +356,13 @@ def test_the_exit_code_table_in_the_readme_is_the_one_the_code_has():
     rows = dict(re.findall(r"^\| (\d) \| (.+) \|$", readme, re.MULTILINE))
     assert set(rows) == {"0", "1", "2", "3", "4"}
     assert "nothing to propose" in rows["1"] and "why findings were skipped" in rows["1"]
+
+
+def test_the_readme_exit_4_row_covers_a_full_or_closed_stdout():
+    """Exit 4 is "the report was not delivered": a closed pipe, a full device and a closed stdout all land there."""
+    readme = (REPO / "README.md").read_text(encoding="utf-8")
+    row = dict(re.findall(r"^\| (\d) \| (.+) \|$", readme, re.MULTILINE))["4"]
+    assert "pipe was closed" in row and "full device" in row and "no stdout" in row
+    assert 'never "nothing to propose"' in row
+    doc = sys.modules["drafter.cli"].__doc__ or ""
+    assert "a full device" in doc and "no stdout at all" in doc
