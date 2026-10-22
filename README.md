@@ -107,7 +107,7 @@ drafter propose PATH ... --scope documentation # as Warden sets it from the gran
 drafter propose PATH ... -v                    # -v logs INFO to stderr, -vv adds refusals and tracebacks
 ```
 
-With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.2 and later refuse a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so. Warden 0.13.4 and later (the pin is 0.13.7) also require that root to be a git checkout with a readable version and refuse a site-packages root, so point `--ghost-root` at a clone, not at an installed copy.
+With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.2 and later refuse a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so. Warden 0.13.4 and later (the pin is 0.13.8) also require that root to be a git checkout with a readable version and refuse a site-packages root, so point `--ghost-root` at a clone, not at an installed copy.
 
 It prints one JSON object on stdout: `proposal` (the intent, scope, affected files and every edit with its `old`
 and `new` text, or `null`) and `skipped` (each finding Drafter recognised but left alone, with the reason). It
