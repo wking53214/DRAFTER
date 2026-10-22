@@ -10,7 +10,7 @@ would propose for a folder and why it left other findings alone.
 EXIT CODES
     0  a proposal was made (printed as JSON on stdout)
     1  nothing to propose (the JSON still lists why findings were skipped)
-    2  usage error: unknown option (options are not abbreviated), or PATH is not a folder
+    2  usage error: unknown option (options are not abbreviated), or PATH is empty or not a folder
     3  findings could not be obtained: Ghost Tools could not run, or the findings
        file is unreadable. This is "unknown", never "nothing to propose".
     4  the output pipe was closed before the report was written (for example `| head`), or stdout
@@ -111,6 +111,10 @@ def _defects(found: Sequence[dict[str, Any]]) -> Sequence[Any]:
 
 
 def _propose(args: argparse.Namespace) -> int:
+    if str(args.path) == "":
+        # Path("") is the current folder: an empty PATH would quietly make the working directory the target.
+        print("drafter: PATH is empty: name the folder to look at", file=sys.stderr)
+        return EXIT_USAGE
     target = Path(args.path)
     if not target.is_dir():
         print(f"drafter: {args.path}: not a folder", file=sys.stderr)

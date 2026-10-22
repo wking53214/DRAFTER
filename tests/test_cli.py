@@ -189,6 +189,33 @@ def test_python_dash_m_drafter_works_as_a_process(tmp_path):
     assert done.returncode == EXIT_PROPOSED and json.loads(done.stdout)["proposal"]["edits"]
 
 
+def test_an_empty_path_is_a_usage_error_not_the_current_folder(tmp_path, capsys, monkeypatch):
+    """`Path("")` is the current folder, so before 0.2.9 `drafter propose ""` quietly made the working directory the
+    target and printed a proposal for it."""
+    root = _tree(tmp_path)
+    findings = _findings(tmp_path, doc_finding(line=3))
+    monkeypatch.chdir(root)
+    before = _snapshot(root)
+    assert main(["propose", str(root), "--findings", str(findings)]) == EXIT_PROPOSED     # the folder itself works
+    capsys.readouterr()
+    code = main(["propose", "", "--findings", str(findings)])
+    captured = capsys.readouterr()
+    assert code == EXIT_USAGE and captured.out == ""
+    assert "PATH is empty" in captured.err and "Traceback" not in captured.err
+    assert len(captured.err.strip().splitlines()) == 1
+    assert _snapshot(root) == before
+
+
+def test_python_dash_m_drafter_with_an_empty_path_exits_2(tmp_path):
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(REPO), os.environ.get("PYTHONPATH", "")])}
+    root = _tree(tmp_path)
+    findings = _findings(tmp_path, doc_finding(line=3))
+    done = subprocess.run([sys.executable, "-m", "drafter", "propose", "", "--findings", str(findings)],
+                          capture_output=True, text=True, env=env, cwd=root, check=False)
+    assert done.returncode == EXIT_USAGE and done.stdout == "", (done.stdout, done.stderr)
+    assert "PATH is empty" in done.stderr
+
+
 class _ClosedPipe:
     """A stdout whose reader has gone away."""
 
@@ -366,3 +393,9 @@ def test_the_readme_exit_4_row_covers_a_full_or_closed_stdout():
     assert 'never "nothing to propose"' in row
     doc = sys.modules["drafter.cli"].__doc__ or ""
     assert "a full device" in doc and "no stdout at all" in doc
+
+
+def test_the_readme_exit_2_row_names_an_empty_path():
+    readme = (REPO / "README.md").read_text(encoding="utf-8")
+    assert "PATH is empty" in dict(re.findall(r"^\| (\d) \| (.+) \|$", readme, re.MULTILINE))["2"]
+    assert "PATH is empty" in (sys.modules["drafter.cli"].__doc__ or "")
