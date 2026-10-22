@@ -6,6 +6,46 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.10] - 2026-10-22
+
+### Changed
+
+- CNS is re-pinned from the tag `v1.9.0` to the tag `v2.0.0`: `cns @ git+https://github.com/wking53214/CNS.git@v2.0.0`
+  with the comment `# v2.0.0 = b13e5d2f9e0e4291725f82794b89117c3d840ac1`, the same text as every other repository of
+  the circuit. Drafter imports only `cns.defect` and `cns.seat`; its suite passes against the installed CNS 2.0.0
+  (pip's `direct_url.json` records `requested_revision` `v2.0.0` and the commit above).
+- Warden is re-pinned from `380894f0304ef40587dd29efd41b4ceccf94a5d3` (0.13.8) to the full commit
+  `b57b81e1c98333c43d422666c89a8fcf3ae6eaca` (Warden 0.13.9). That Warden requires CNS `v2.0.0`, so
+  `pip install -e ".[dev]"` resolves and `pip check` is clean. The `Warden.git` spelling is unchanged.
+- The `integration` job's sibling checkouts move to the heads of the sibling branches
+  `claude/horsemen-production-status-5wsndb`: ghost_tools `5a9154d3c76670f5bf1f46d845acadfed46d7bc8` (1.10.8, was
+  `2d03d8e`, 1.10.6), SWIZZLE `3f35dad5568b590c2ee36e60533d50a35db94aa2` (0.8.7, was `5226584`, 0.8.5) and ASSAY
+  `184679c06e0a636a9a08a8403efa410b375c9429` (0.11.5, was `a1732f2`, 0.11.3). JUDGE stays at `e5c3f98` (0.4.8). The
+  comments beside the refs said "head of ... main", which stopped being true; they now name the package version only,
+  and the paragraph above them no longer says the commits are the heads of `main` or that none carries a release tag.
+- The README is rewritten: what this is, how to install and run (the commands were run in a fresh virtual environment),
+  what works and the test or CI job that shows it, what does not work or is not proven, the open defects, what broke
+  and how it was fixed (checked against this file, the git history and the tests), the self-hosting record and the
+  ceilings code cannot fix. The "what is beautiful" section is gone (it claimed that the worst Drafter can do is
+  propose less, which the known defects below it contradict). The Status paragraph is gone with its statement about
+  tags. The Warden release the README names is now 0.13.9. The preamble of this file still carries its older
+  sentences about tags and is left as written.
+
+### Fixed
+
+- `STACK.md` called CNS private. It is a public repository.
+
+### Tests
+
+- Added `tests/test_readme_ledger.py`: the required README sections exist once and in order, every test the README
+  names exists, every version and date in the ledger matches a heading in this file, the CI jobs the README names are
+  in the workflow, the Warden release the README names equals the one in the pin comment, no marketing words, no
+  em dashes, no statement about whether release tags exist, and `STACK.md` does not call CNS private.
+- No pre-existing test was edited.
+- Checked on Python 3.11, 3.12 and 3.13 with the real circuit (ghost_tools, JUDGE, SWIZZLE and ASSAY on the path,
+  numpy and matplotlib installed as the `integration` job does): the whole suite passes with no skips; `ruff check .`,
+  `mypy` and `pip check` are clean.
+
 ## [0.2.9] - 2026-10-22
 
 ### Changed

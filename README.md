@@ -10,7 +10,7 @@ Drafter is one of seven repositories in a stack that improves code under human c
 
 It is small and young. It has three fixers, it has been tested on scratch repositories and not on large real code, and the sections below say plainly what is and is not shown.
 
-Version `0.2.9`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
+Version `0.2.10`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
 
 ## HOW TO INSTALL AND RUN
 
@@ -213,6 +213,8 @@ In the order it happened. Each line gives the version that fixed it (with the da
 
 **0.2.9** (2026-10-22): A report that could not be written to stdout (a full device, or no stdout) ended as a traceback with exit 1, the code that means "nothing to propose"; only a closed pipe had been handled. These now exit 4, and `drafter propose ""` no longer silently uses the current directory (exit 2). Held by `test_a_full_stdout_is_exit_4_with_one_plain_line_not_a_traceback`, `test_a_closed_stdout_is_exit_4_with_one_plain_line_not_a_traceback`, `test_python_dash_m_drafter_with_stdout_on_a_full_device_exits_4_cleanly` and `test_an_empty_path_is_a_usage_error_not_the_current_folder`.
 
+**0.2.10** (2026-10-22): `STACK.md` called CNS private although it is public, and the README had no plain account of what was unproven or what had broken, and carried a claim of beauty that nothing could show. `STACK.md` is corrected and the README rewritten; the CNS pin moved to its v2.0.0 tag with Warden and the sibling checkouts moved to match. Held by `test_the_stack_page_does_not_call_a_public_repository_private` and the other tests in `tests/test_readme_ledger.py`.
+
 ## SELF-HOSTING
 
 The circuit has been pointed at its own repositories once that is recorded. Warden's `docs/REGISTRY.json`, rows 5 and 6 (dated 2026-10-14 in the file), record the seven repositories being governed as fresh clones, Drafter's among them. For this repository the record is row 5: it ended `ACCEPT` with one change applied to the clone, and the file says the change was Burnish's generated facts section in the README and that nothing was committed from the clones. Row 6 repeated the run for four other repositories and does not include this one.
@@ -224,7 +226,7 @@ That run predates Warden 0.13.0 and the stricter rules Warden has had since, so 
 - The repository is young. Its history in `CHANGELOG.md` starts on 2026-10-08.
 - One person maintains it. No outside users are known, so nobody has yet run it on code its author did not choose.
 - Releases are tagged by the owner, so check the repository's tags and releases for what exists.
-- Experimental, version 0.2.9, maintained by one person. Changes are listed in `CHANGELOG.md`.
+- Experimental, version 0.2.10, maintained by one person. Changes are listed in `CHANGELOG.md`.
 - Every test here uses scratch repositories or fixtures. Only use on a large, real codebase would show how often the refusals fire and whether the text checks hold up, and that has not happened.
 - The dependencies are git URLs pinned to commits, not releases from PyPI, so installing needs GitHub to be reachable.
 
