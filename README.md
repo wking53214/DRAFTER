@@ -8,7 +8,7 @@ The in-loop maker. It reads what Ghost Tools found and proposes one fix at a tim
 
 One of seven repositories in a stack that improves code under human control. Drafter has one job: given a Ghost Tools finding, return the change that would close it, as data. [Warden](https://github.com/wking53214/Warden) runs the loop around it. Warden asks Drafter for a change, checks a person granted it, runs the target's tests, applies the change, runs the tests again, and has Ghost look again. Drafter is then asked again, until it has nothing left to propose.
 
-Version `0.2.8`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
+Version `0.2.9`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
 
 ## WHAT IT DOES NOT OWN
 
@@ -194,7 +194,7 @@ The README says Drafter never writes and never measures. The tests read its sour
 
 ## Status
 
-Experimental, version 0.2.8, maintained by one person. Changes are listed in `CHANGELOG.md`. An older tag, `v0.10.0`, exists in this repository from earlier numbering and does not correspond to this version. Releases of this version are not tagged yet; tagging is the owner's decision.
+Experimental, version 0.2.9, maintained by one person. Changes are listed in `CHANGELOG.md`. An older tag, `v0.10.0`, exists in this repository from earlier numbering and does not correspond to this version. Releases of this version are not tagged yet; tagging is the owner's decision.
 
 ## Support
 

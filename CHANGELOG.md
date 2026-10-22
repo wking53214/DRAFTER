@@ -6,6 +6,44 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.9] - 2026-10-22
+
+### Changed
+
+- Warden is re-pinned from `1636e1a21f124eedbf6e158db95dc75344f4308d` (0.13.7) to the full commit
+  `380894f0304ef40587dd29efd41b4ceccf94a5d3` (Warden 0.13.8; untagged). The README sentence naming the pinned Warden
+  says 0.13.8. The `Warden.git` spelling and the CNS tag pin `@v1.9.0` are unchanged.
+- The `integration` job's sibling checkouts move to the heads of the sibling `main` branches, which are also the
+  commits the CNS stack manifest records: ghost_tools `2d03d8e19dc5937a6f45379c429d1a3afce4ab29` (1.10.6, was
+  `c2ada82`, 1.10.5), SWIZZLE `522658415b026ac3211d3fc130ba7da7c77cc400` (0.8.5, was `6bd88f3`, 0.8.4), JUDGE
+  `e5c3f98f0f3998a8c5dac458ad0fcf4e050eb074` (0.4.8, was `cf71fb4`, 0.4.7), ASSAY
+  `a1732f2bf3748235661f65b96e590a6d44ace71c` (0.11.3, was `54248be`, 0.11.2). The version note beside each ref says
+  the same.
+
+### Fixed
+
+- A report that cannot be written to stdout no longer ends as a traceback with exit 1. With stdout on a full device,
+  `drafter propose T --findings F` ended in `OSError: [Errno 28]` from the print, and with file descriptor 1 closed in
+  `AttributeError: 'NoneType' object has no attribute 'flush'` from the flush; both exited 1, which the exit-code table
+  defines as "nothing to propose", so they read as a clean no-op. Only `BrokenPipeError` was handled (exit 4). Now any
+  `OSError` from the print or flush, and the `AttributeError` of a closed stdout, write one plain line to stderr and
+  exit 4, the existing "report not delivered" code. A closed stdout used to raise the same `AttributeError` after an
+  exit 2 or exit 3 as well; the flush now sits inside the guarded block, so those codes are reported as they are.
+- The 0.2.8 entry says the exit-code table "stays true". It did not cover this case: exit 4 is now also the answer when
+  stdout is full or closed, and the README row for exit 4 and the module docstring say so. The table still has the same
+  five codes; row 4 was widened rather than a sixth row added, since the code is the existing one. The 0.2.8 entry is
+  left as written.
+- `drafter propose ""` silently made the current directory the target (`Path("")` is the current folder). An empty
+  PATH is now a usage error: one plain line on stderr and exit 2. The README row for exit 2 and the module docstring
+  name it.
+
+### Tests
+
+- Added tests that fail on the 0.2.8 code (`tests/test_cli.py`): a full-device stdout and a `None` stdout in process;
+  the real thing in a subprocess with `stdout=open('/dev/full', 'wb')` and with file descriptor 1 closed; an empty PATH
+  in process and as a subprocess; and the README exit 2 and exit 4 rows.
+- No pre-existing test was edited.
+
 ## [0.2.8] - 2026-10-21
 
 ### Changed
