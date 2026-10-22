@@ -6,6 +6,16 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.11] - 2026-10-22
+
+### Changed
+
+- The `integration` job's JUDGE checkout moves from `e5c3f98f0f3998a8c5dac458ad0fcf4e050eb074` (0.4.8) to
+  `c3001b86764c8946dbc3d367c977aed53cbab9b7` (0.4.10), the head of the JUDGE branch
+  `claude/horsemen-production-status-5wsndb`. The workflow comments that said JUDGE was not moved in the 0.2.10
+  re-pin are updated to match. Nothing else changed.
+- No pre-existing test was edited.
+
 ## [0.2.10] - 2026-10-22
 
 ### Changed
