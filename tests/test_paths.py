@@ -1,9 +1,11 @@
 """Finding paths: tried as given, then without the target's own folder name; always inside the target."""
 
 import os
+from pathlib import PurePosixPath
 
 import pytest
 
+from drafter._safe import Refuse, check_editable
 from support import dead_finding, doc_finding, propose
 
 SRC = "def used():\n    return 1\n\n\ndef orphan():\n    return 2\n"
@@ -104,3 +106,34 @@ def test_config_and_test_folder_documents_are_never_edited(tmp_path, file):
     kind = doc_finding if file.endswith(".md") else dead_finding
     proposal, drafter = propose(root, kind(file=file, **({"line": 1} if file.endswith(".md") else {})))
     assert proposal is None and drafter.last_skipped
+
+
+@pytest.mark.parametrize("file", ["setup.py", "pkg/setup.py", "noxfile.py", "conftest.py"])
+def test_a_dead_code_finding_in_a_build_script_gets_no_proposal(tmp_path, file):
+    """The README says build configuration files are never edited. A dead-code finding in `setup.py` used to get a
+    proposal, because the list of blocked names lacked it."""
+    root = _target(tmp_path)
+    path = root / file
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(SRC, encoding="utf-8")
+    proposal, drafter = propose(root, dead_finding(file=file))
+    assert proposal is None and "never edits" in drafter.last_skipped[0][1], drafter.last_skipped
+
+
+@pytest.mark.parametrize("file", ["setup.py", "Setup.PY", "pkg/setup.py", "setup.cfg", "MANIFEST.in", "manifest.in",
+                                  "tox.ini", "Makefile", "makefile", "pyproject.toml", "pytest.ini", "noxfile.py",
+                                  "conftest.py", ".coveragerc", "requirements.txt", "Requirements.TXT",
+                                  "requirements-dev.txt", "requirements_test.txt", "pkg/requirements-ci.txt",
+                                  ".github/workflows/ci.yml", "tests/helper.py", "test_x.py", "x_test.py"])
+def test_every_build_and_test_configuration_name_is_blocked(file):
+    """No current fixer reaches a non-Python, non-Markdown file, but the block is on the path, so a future fixer
+    cannot slip past it."""
+    with pytest.raises(Refuse, match="never edits"):
+        check_editable(PurePosixPath(file))
+
+
+@pytest.mark.parametrize("file", ["my_setup.py", "setup_helpers.py", "requirements_check.py", "pkg/mod.py",
+                                  "docs/requirements.md", "requirements.py"])
+def test_a_name_that_only_looks_like_a_build_file_is_still_editable(file):
+    """The block is by exact name or by the `requirements*.txt` pattern, not by a loose substring."""
+    check_editable(PurePosixPath(file))
