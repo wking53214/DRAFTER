@@ -42,9 +42,10 @@ jobs:
   # that seat the Drafter in Warden's full gate actually run. Zero skips is required: a skipped test here means
   # the circuit was not really there, and the job fails rather than report a green it did not earn.
   #
-  # The four siblings are checked out at full commits, never a branch: the heads of their
-  # `claude/horsemen-production-status-5wsndb` branches on the day of the CNS v2.0.0 re-pin. A pin may fall behind its
-  # repository's head later.
+  # The four siblings are checked out at full commits, never a branch. They are the last set this repository's CI
+  # tested on its own; they are not moved when Warden's pin moves, and nothing here says they match any repository's
+  # main. The check that the set that lands together works together is the `stack` job in the CNS
+  # repository.
   # To bump one, see "Bumping the pins" in README.md: put the new full 40-character commit after `ref:` and update
   # the version note beside it. The `static` and `pytest` jobs do not need them. If those repositories are private,
   # add a repository secret CIRCUIT_TOKEN (a read-only token for them).

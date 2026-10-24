@@ -6,6 +6,60 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.12] - 2026-10-24
+
+Wave F: the fixes the round-6 independent audit of the final release set asked for. Each item was reproduced before it
+was changed.
+
+### Changed
+
+- Step 1: the guard `test_the_drafter_never_opens_a_file_for_writing` is no longer a substring search. It reads the
+  syntax tree of every module and fails on any call that opens a file for writing or changes the filesystem (`open`,
+  `io.open`, `io.FileIO`, `Path.open`, `os.open`, aliased imports, a mode it cannot read, `write_text`, `os.replace`,
+  `shutil`, `tempfile`, `eval`, `exec`), with one site named in an exact allowlist: `_silence_stdout` in
+  `drafter/cli.py`, which opens the null device on an error path. A second test shows the checker flags each spelling
+  and does not flag plain reads. The README and `STACK.md` no longer say "never opens a file for writing" or "never
+  writes"; they say that no file of the user's is written and that one error path opens the null device.
+- Step 2: `setup.py`, `MANIFEST.in` and `requirements*.txt` are never edited. Reproduced first: a `dead_code` finding in
+  `setup.py` got a proposal. The README lists the blocked names; only `.py` and Markdown files are rewritten by the
+  current fixers, so the non-Python names are blocked as a precaution.
+- Step 3: a dead-code finding with no `dynamic_lookup_possible` key declines, as a missing `framework_hook` already
+  did (it used to count as "no"). The README says so.
+- Step 4: a malformed record is skipped under its own `id` when that is readable, not under `?`.
+- Step 5: the Warden pin moves from `b57b81e1c98333c43d422666c89a8fcf3ae6eaca` (0.13.9) to the full commit
+  `9ecd1124e6c1b1c4ad7daed37b17f9009662dd9d` (Warden 0.13.10); CNS stays `@v2.0.0`. The four `integration` sibling pins
+  (ghost_tools `5a9154d`, JUDGE `c3001b8`, SWIZZLE `3f35dad`, ASSAY `184679c`) are not moved; the workflow comment and
+  the README now call them the last set this repository's CI tested on its own, not the head of any `main`. The README
+  loses its repeated sentences, its SELF-HOSTING section cites the CNS repository's
+  `docs/evidence/SELFHOSTING_2026-10-23.md` and says what it recorded and does not mean, a known defect is added (the
+  stack install alone leaves this repository's suite red), and the ledger gets an entry for each fix above.
+
+### Tests
+
+- Step 1: `tests/test_independence.py` gains `test_the_write_checker_sees_every_spelling_it_is_meant_to`;
+  `test_the_drafter_never_opens_a_file_for_writing` keeps its name and now uses the syntax-tree checker.
+- Step 2: `tests/test_paths.py` gains `test_a_dead_code_finding_in_a_build_script_gets_no_proposal` (failed on 0.2.11 for
+  `setup.py`), `test_every_build_and_test_configuration_name_is_blocked` and
+  `test_a_name_that_only_looks_like_a_build_file_is_still_editable`.
+- Step 3: `tests/test_conservative.py` gains the missing-key test (failed on 0.2.11) and its counterpart with the key set
+  to `no`. Edited under the rule that a test asserting changed behaviour may be updated, and nothing more: the two helpers
+  that build hand-made `dead_code` findings (`tests/support.py` `dead_finding`, `tests/test_dead_code_fixer.py`
+  `_finding`) now carry `dynamic_lookup_possible: "no"`, as real Ghost does for a repository with a project root.
+  Without it every test built from them would have tested the missing-key case.
+  The real-Ghost tests found the same thing from the other side: `tests/test_real_ghost.py` built its scratch target with
+  no project file, and real Ghost then leaves `dynamic_lookup_possible` out, so the three `dead_code` cases there got no
+  proposal. `_build_code` now writes a `pyproject.toml` into the target, as any real project has (edited in the Step 5
+  commit, caused by Step 3, found when the full suite ran). A new test in the same file records the other side: real Ghost
+  on a tree with no project root omits the key and the Drafter declines with the reason.
+- Step 4: `tests/test_odd_input.py` and `tests/test_cli.py` gain tests that a malformed record keeps its id (failed on
+  0.2.11) and that an unreadable id still files under `?`.
+- Step 5: `tests/test_readme_ledger.py` holds the self-hosting numbers to constants that name the evidence file, and holds
+  the tested-set wording. Edited, with the reason: `tests/test_release.py`
+  `test_the_readme_does_not_restate_the_pinned_versions` asserted that the strings `0.11.5`, `v0.11` and
+  `pinned to Warden tag` were absent from the README and `pyproject.toml`, a guard from an older era that could not fail;
+  it now asserts that the pin comment names exactly one Warden release. The no-full-commit-in-the-README assertion is
+  unchanged.
+
 ## [0.2.11] - 2026-10-22
 
 ### Changed

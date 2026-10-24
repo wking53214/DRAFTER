@@ -10,7 +10,7 @@ Drafter is one of seven repositories in a stack that improves code under human c
 
 It is small and young. It has three fixers, it has been tested on scratch repositories and not on large real code, and the sections below say plainly what is and is not shown.
 
-Version `0.2.11`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
+Version `0.2.12`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
 
 ## HOW TO INSTALL AND RUN
 
@@ -46,7 +46,7 @@ This package depends on one exact Warden commit and one exact CNS release tag, s
 3. Run `pip install -e ".[dev]"`, `pip check` and `pytest`. The tests check that the Warden pin is a tag or a full commit, that its comment names the installed release, that the README names the same Warden release, that the CNS pin is a release tag and the same text Warden requires, and that this package's `requires_contract` matches the installed Warden's `CONTRACT`.
 4. Open a pull request. CI runs the same checks, and the `integration` job runs the whole suite against the circuit.
 
-The `integration` job also pins its four sibling checkouts (ghost_tools, JUDGE, SWIZZLE, ASSAY) to full commits; bump them in `.github/workflows/tests.yml` the same way.
+The `integration` job also pins its four sibling checkouts (ghost_tools, JUDGE, SWIZZLE, ASSAY) to full commits in `.github/workflows/tests.yml`. Those four are the last set this repository's CI tested on its own; they are not moved when the Warden pin moves, and they are not claimed to be the head of any repository's `main`. The check that the set that lands together works together is the `stack` job in the CNS repository. To bump one, put the new full commit after `ref:` and update the version note beside it.
 
 ### Run
 
@@ -66,7 +66,7 @@ drafter propose PATH ... --scope documentation # as Warden sets it from the gran
 drafter propose PATH ... -v                    # -v logs INFO to stderr, -vv adds refusals and tracebacks
 ```
 
-With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.2 and later refuse a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so. Warden 0.13.4 and later (the pin is 0.13.9) also require that root to be a git checkout with a readable version and refuse a site-packages root, so point `--ghost-root` at a clone, not at an installed copy.
+With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.2 and later refuse a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so. Warden 0.13.4 and later (the pin is 0.13.10) also require that root to be a git checkout with a readable version and refuse a site-packages root, so point `--ghost-root` at a clone, not at an installed copy.
 
 It prints one JSON object on stdout: `proposal` (the intent, scope, affected files and every edit with its `old` and `new` text, or `null`) and `skipped` (each finding Drafter recognised but left alone, with the reason). It writes no file. Exit codes:
 
@@ -139,7 +139,7 @@ Each line names what shows it. Test totals are not written here, because a numbe
 - A root-level file reported as `tgt/m.py` is found. Shown by `tests/test_paths.py` and `tests/test_real_ghost.py`.
 - Odd input (a file that is not UTF-8, missing or wrong-typed fields, junk instead of findings, a bad target) gives no proposal and a reason, never a crash. Shown by `tests/test_odd_input.py`.
 - A module-level list of strings tested with `in` inside a loop becomes a set, byte for byte otherwise (a tuple too; a multi-line literal with comments, CRLF and a BOM all kept). Every other kind of element (an f-string, a name, a tuple, a hex number, implicit concatenation) and every other kind of use (iteration, indexing, `len`, concatenation, a method, a rebinding, a keyword argument, a mention in a string, another file or a document) is refused with a reason. An old Ghost that does not name the container gets no proposal. Through the whole gate the set stands and Ghost falls silent. Shown by `tests/test_list_membership_fixer.py` (`test_through_the_whole_gate_the_set_stands_and_ghost_is_silent` needs the real circuit; the rest do not).
-- With the real Ghost scan and the real Warden loop, a root-level module, a nested module, a module several folders deep and two README claims (one in the root, one in a subfolder) each produce a proposal that Warden applies cleanly, and the loop then converges and ends `ACCEPT`. Through the whole gate the set stands and Ghost falls silent. Shown by `tests/test_real_ghost.py` (`test_the_real_loop_fixes_the_root_readme_only_and_converges`, `test_a_real_dead_code_finding_is_proposed_and_applied_cleanly`) when Ghost Tools, SWIZZLE, ASSAY and the Judge are importable; the CI job `integration` runs them and fails if any test skips.
+- With the real Ghost scan and the real Warden loop, a root-level module, a nested module, a module several folders deep and two README claims (one in the root, one in a subfolder) each produce a proposal that Warden applies cleanly, and the loop then converges and ends `ACCEPT`. Shown by `tests/test_real_ghost.py` (`test_the_real_loop_fixes_the_root_readme_only_and_converges`, `test_a_real_dead_code_finding_is_proposed_and_applied_cleanly`) when Ghost Tools, SWIZZLE, ASSAY and the Judge are importable; the CI job `integration` runs them and fails if any test skips.
 - A run that ends `ACCEPT_UNVERIFIED` has the applied edit put back by Warden. Shown by `tests/test_real_ghost.py::test_an_unverified_run_puts_the_applied_edit_back`.
 - The exit codes are the documented ones, including exit 4 for a closed pipe, a full device and a closed stdout. Shown by `tests/test_cli.py` (`test_exit_codes_are_the_documented_ones`, `test_python_dash_m_drafter_with_stdout_on_a_full_device_exits_4_cleanly`, `test_python_dash_m_drafter_into_a_closed_pipe_exits_4_cleanly`).
 - A bug inside a fixer is reported on the `drafter` logger and in the JSON, not swallowed. Shown by `tests/test_observable_failures.py`.
@@ -183,6 +183,7 @@ Open ones, with what they cost:
 - The list fixer cannot see what is on the left of `in`. Against a list, `x in NAME` is False for an unhashable `x`; against a set it raises `TypeError`. If a caller ever passes a list or a dict there, the fixed code crashes where the old code was silently False, and only a test that exercises that call will catch it. Found by red team on 2026-10-14; left as a limit because refusing it would refuse every fix. No test can hold this one.
 - A line that has a `|` anywhere is treated as a table row and refused. This costs a missed fix.
 - The claim wording changes the meaning slightly on purpose: "N tests passed" becomes "at least M `test_*` functions", because Ghost counts test functions and does not run them. Where the claim began a sentence, the sentence starts "The suite holds"; elsewhere it reads "at least M ...". Odd sentences can still read a little stiffly.
+- The stack install alone leaves this repository's own suite red. The recipe in the CNS install file installs `ghost-tools` into site-packages, and Warden refuses a Ghost root inside site-packages, so the tests that seat the real Ghost fail (10 failed in the self-hosting record below) until a ghost_tools checkout is on `PYTHONPATH` and the other clones sit beside this one (`CIRCUIT_ROOT`). The `integration` job does exactly that. This is a gap in the install recipe, not fixed here; no test can hold it.
 - The text scanner and the Markdown checks are hand-rolled, so they are long, and a long hand-written scanner is where the next bug is most likely to be.
 
 ## WHAT BROKE AND HOW IT WAS FIXED
@@ -215,18 +216,36 @@ In the order it happened. Each line gives the version that fixed it (with the da
 
 **0.2.10** (2026-10-22): `STACK.md` called CNS private although it is public, and the README had no plain account of what was unproven or what had broken, and carried a claim of beauty that nothing could show. `STACK.md` is corrected and the README rewritten; the CNS pin moved to its v2.0.0 tag with Warden and the sibling checkouts moved to match. Held by `test_the_stack_page_does_not_call_a_public_repository_private` and the other tests in `tests/test_readme_ledger.py`.
 
+**0.2.12** (2026-10-24): The README said Drafter never opens a file for writing, which was false in the letter: `_silence_stdout` in `drafter/cli.py` opens the null device on an error path. The guard was a substring search for `open(` that `io.FileIO(...)` slipped past. Found by the round-6 audit (2026-10-23 to 2026-10-24). The guard now reads the syntax tree of every module and names that one site in an allowlist, and the README says what is true. Held by `test_the_drafter_never_opens_a_file_for_writing` and `test_the_write_checker_sees_every_spelling_it_is_meant_to`.
+
+**0.2.12** (2026-10-24): A dead-code finding in `setup.py` produced a proposal, although the README said build configuration files are never edited; the blocked list lacked `setup.py`, `MANIFEST.in` and `requirements*.txt`. Found by the round-6 audit. All three are blocked now, by name in any folder. Held by `test_a_dead_code_finding_in_a_build_script_gets_no_proposal` and `test_every_build_and_test_configuration_name_is_blocked`.
+
+**0.2.12** (2026-10-24): A dead-code finding that did not say whether a computed lookup was possible (no `dynamic_lookup_possible` key) was treated as "no", while a missing `framework_hook` already declined. Found by the round-6 audit. A missing key now declines with a reason. Held by `test_a_finding_that_does_not_say_whether_a_computed_lookup_is_possible_is_declined`.
+
+**0.2.12** (2026-10-24): A malformed record, for example `evidence: 5`, was listed in `skipped` under the finding id `?` even when its own id was readable. Found by the round-6 audit. It is now listed under its own id. Held by `test_a_malformed_record_is_skipped_under_its_own_id`.
+
+**0.2.12** (2026-10-24): The README repeated two sentences, said no fresh self-hosting run was recorded after one had been, and called the CI sibling pins heads of `main`; a guard in `tests/test_release.py` still checked for strings from an older era (`0.11.5`). Found by the round-6 audit. The text is corrected, the dead guard is replaced by a check that the pin comment names one Warden release, and the self-hosting numbers are held by `test_the_self_hosting_paragraph_holds_the_numbers_in_the_evidence_record`.
+
 ## SELF-HOSTING
 
-The circuit has been pointed at its own repositories once that is recorded. Warden's `docs/REGISTRY.json`, rows 5 and 6 (dated 2026-10-14 in the file), record the seven repositories being governed as fresh clones, Drafter's among them. For this repository the record is row 5: it ended `ACCEPT` with one change applied to the clone, and the file says the change was Burnish's generated facts section in the README and that nothing was committed from the clones. Row 6 repeated the run for four other repositories and does not include this one.
+The whole circuit has been run over this repository. The full record is in the CNS repository, https://github.com/wking53214/CNS, in `docs/evidence/SELFHOSTING_2026-10-23.md` (on the CNS branch `claude/horsemen-production-status-5wsndb` until that branch is merged), with the run records beside it. It was made on 2026-10-22 to 2026-10-23 on a fresh clone at version 0.2.11, which is before the changes listed under 0.2.12 in `CHANGELOG.md`.
 
-That run predates Warden 0.13.0 and the stricter rules Warden has had since, so it does not show what the current versions would do. No fresh run on the current commits is recorded yet. The CNS repository is at https://github.com/wking53214/CNS.
+What it recorded for this repository:
+
+- Run 1 ended `FINISH_REJECTED` (exit 1): this repository's suite was red from the start, 383 passed and 10 failed, because the recipe left `ghost-tools` in site-packages (see Known defects). That is the install-recipe gap, not a defect in a proposal.
+- Run 2, with a ghost_tools checkout on `PYTHONPATH` and the other clones beside the target, ended `ACCEPT` (exit 0). The Judge's words: suite 393 passed, 0 skipped; Ghost reported 37 findings at the start and 37 at the end, none new; SWIZZLE's proofs held and 28 of 28 attacks held; ASSAY's answer key caught 5 of 7 failure modes, with a floor of 3. One change was kept: a README section written by Burnish 0.3.11.
+- Seven checks were declined in both runs, so each record carries 7 gaps: `mutate`, `kernel`, `structure`, `tests`, `project`, `secrets` and `correlate`.
+
+What the record does not mean: an `ACCEPT` with 7 gaps does not mean there are no secrets, no weak tests, no mutation survivors and no structural problems; those checks did not run. Ghost still reports 37 findings on this repository; `ACCEPT` means none were new. The README text Burnish wrote was not reviewed by a person. The record covers version 0.2.11 only. It has not been repeated on the current commit, and the accepted run used the earlier Burnish 0.3.11 and was not re-run with the later one.
+
+An earlier, smaller record exists in Warden's `docs/REGISTRY.json` (row 5, 2026-10-14, an early Warden); it ended `ACCEPT` and changed nothing that was kept.
 
 ## CEILINGS CODE CANNOT FIX
 
 - The repository is young. Its history in `CHANGELOG.md` starts on 2026-10-08.
-- One person maintains it. No outside users are known, so nobody has yet run it on code its author did not choose.
+- One person maintains it, and no outside users are known, so nobody has yet run it on code its author did not choose.
 - Releases are tagged by the owner, so check the repository's tags and releases for what exists.
-- Experimental, version 0.2.11, maintained by one person. Changes are listed in `CHANGELOG.md`.
+- Experimental, version 0.2.12. Changes are listed in `CHANGELOG.md`.
 - Every test here uses scratch repositories or fixtures. Only use on a large, real codebase would show how often the refusals fire and whether the text checks hold up, and that has not happened.
 - The dependencies are git URLs pinned to commits, not releases from PyPI, so installing needs GitHub to be reachable.
 

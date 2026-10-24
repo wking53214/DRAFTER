@@ -96,7 +96,7 @@ def test_the_readme_uses_no_marketing_words():
 
 
 def test_the_readme_has_no_em_dashes():
-    assert "—" not in README and "—" not in CHANGELOG
+    assert chr(0x2014) not in README and chr(0x2014) not in CHANGELOG
 
 
 def test_the_readme_says_nothing_about_whether_release_tags_exist():
@@ -129,3 +129,43 @@ def test_the_cns_pin_in_the_readme_note_is_the_pin_in_pyproject():
 def test_the_stack_page_does_not_call_a_public_repository_private():
     stack = (REPO / "STACK.md").read_text(encoding="utf-8")
     assert "CNS (private)" not in stack
+
+
+#: What the self-hosting record says about this repository. Copied from the CNS repository's
+#: docs/evidence/SELFHOSTING_2026-10-23.md (branch claude/horsemen-production-status-5wsndb until merged), rows
+#: "DRAFTER run 1" and "DRAFTER run 2". The README quotes them; this test holds the quotes to these constants so a
+#: number cannot be changed in the README without changing it here, where the evidence file is named.
+SELFHOSTING_EVIDENCE = "docs/evidence/SELFHOSTING_2026-10-23.md"
+SELFHOSTING_RECORDED = (
+    "383 passed and 10 failed",          # run 1: FINISH_REJECTED, SUITE_RED, ghost_tools in site-packages
+    "393 passed, 0 skipped",             # run 2: ACCEPT, the Judge's own words
+    "37 findings at the start and 37 at the end",    # Ghost, none new
+    "28 of 28 attacks held",             # SWIZZLE governor attacks
+    "5 of 7 failure modes",              # ASSAY's answer key, floor 3
+    "floor of 3",
+    "7 gaps",                            # the seven declined checks, in both runs
+    "Ghost still reports 37 findings",
+    "`FINISH_REJECTED`", "`ACCEPT`",
+    "Burnish 0.3.11",
+)
+DECLINED_CHECKS = ("mutate", "kernel", "structure", "tests", "project", "secrets", "correlate")
+
+
+def test_the_self_hosting_paragraph_holds_the_numbers_in_the_evidence_record():
+    text = section("## SELF-HOSTING")
+    assert SELFHOSTING_EVIDENCE in text
+    assert "claude/horsemen-production-status-5wsndb" in text and "https://github.com/wking53214/CNS" in text
+    for quoted in SELFHOSTING_RECORDED:
+        assert quoted in text, quoted
+    for check in DECLINED_CHECKS:
+        assert f"`{check}`" in text, check
+    assert "does not mean there are no secrets, no weak tests" in text
+    assert "no fresh" not in text.lower(), "the stale 'no fresh run is recorded' sentence came back"
+
+
+def test_the_readme_says_the_ci_sibling_pins_are_a_tested_set_not_a_head_of_main():
+    assert "the last set this repository's CI tested on its own" in README
+    assert "`stack` job in the CNS repository" in README
+    lowered = " ".join(WORKFLOW.lower().replace("#", " ").split())
+    assert "head of" not in lowered and "heads of" not in lowered, "the workflow calls a pin the head of something"
+    assert "they are not moved when warden's pin moves" in lowered
