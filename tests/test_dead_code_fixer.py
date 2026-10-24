@@ -18,7 +18,7 @@ def _finding(file="pkg/mod.py", name="unused", kind="function", start=5, end=6, 
     return {"id": "ghost-dead1", "severity": "minor", "status": "confirmed", "summary": "unused",
             "detector": "dead_code",
             "attributes": {"name": name, "kind": kind, "line_start": str(start),
-                           "line_end": str(end), "framework_hook": hook},
+                           "line_end": str(end), "framework_hook": hook, "dynamic_lookup_possible": "no"},
             "evidence": {"file": file, "line_start": start, "line_end": end}}
 
 

@@ -96,7 +96,7 @@ def dead_finding(file="m.py", name="orphan", kind="function", start=5, end=6, ho
     return {"id": fid, "severity": "minor", "status": "confirmed", "summary": "unused",
             "detector": "dead_code",
             "attributes": {"name": name, "kind": kind, "line_start": str(start),
-                           "line_end": str(end), "framework_hook": hook},
+                           "line_end": str(end), "framework_hook": hook, "dynamic_lookup_possible": "no"},
             "evidence": {"file": file, "line_start": start, "line_end": end}}
 
 

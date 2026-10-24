@@ -232,3 +232,19 @@ def test_scope_of_is_cheap_and_needs_no_files():
     assert d.scope_of({"detector": "dead_code"}) == "code"
     assert d.scope_of({"detector": "doc_test_count_drift"}) == "documentation"
     assert d.scope_of({"detector": "other"}) is None and d.scope_of(7) is None
+
+
+def test_a_finding_that_does_not_say_whether_a_computed_lookup_is_possible_is_declined(tmp_path):
+    """Real Ghost leaves `dynamic_lookup_possible` out when it found no project root and no computed lookup, so
+    'nothing was said' is not 'no'. A missing key declines, the same way a missing `framework_hook` does."""
+    root = _repo(tmp_path, {"m.py": ORPHAN})
+    finding = dead_finding(file="m.py", name="orphan", start=1, end=2)
+    del finding["attributes"]["dynamic_lookup_possible"]
+    proposal, drafter = propose(root, finding)
+    assert proposal is None and "does not say whether a computed lookup is possible" in drafter.last_skipped[0][1]
+
+
+def test_the_same_finding_with_the_key_set_to_no_is_proposed(tmp_path):
+    root = _repo(tmp_path, {"m.py": ORPHAN})
+    proposal, _ = propose(root, dead_finding(file="m.py", name="orphan", start=1, end=2))
+    assert proposal is not None and proposal.edits[0].old == ORPHAN
