@@ -1,5 +1,7 @@
 """Safe or silent: odd input gives no proposal and a recorded reason, never a crash."""
 
+from pathlib import Path
+
 import pytest
 from cns.defect import Defect, DefectSeverity
 
@@ -170,3 +172,37 @@ def test_a_finding_with_no_usable_detector_is_recorded_not_dropped(tmp_path, det
     assert drafter.propose(root, [bad], "base") is None
     ((fid, reason),) = drafter.last_skipped
     assert fid == "ghost-x" and "names no detector" in reason
+
+
+@pytest.mark.parametrize("field, value", [("evidence", 5), ("evidence", "not an object"), ("attributes", 3)])
+def test_a_malformed_record_is_skipped_under_its_own_id(field, value):
+    """Warden's reader cannot read these, and the skip used to be filed under '?', so a person could not tell which
+    finding it was. When the record's id is readable it is kept."""
+    bad = dead_finding(fid="ghost-bad")
+    bad[field] = value
+    drafter = Drafter()
+    assert drafter.propose(Path("."), [bad], "") is None
+    ((fid, reason),) = drafter.last_skipped
+    assert fid == "ghost-bad" and "could not be read" in reason
+    assert drafter.describe_skipped()[0].startswith("skipped ghost-bad:")
+
+
+@pytest.mark.parametrize("record_id", [None, "", 5.5, ["a"], {"k": 1}, True])
+def test_a_malformed_record_with_no_readable_id_is_still_filed_under_a_question_mark(record_id):
+    bad = dead_finding()
+    bad["evidence"] = 5
+    bad["id"] = record_id
+    drafter = Drafter()
+    drafter.propose(Path("."), [bad], "")
+    ((fid, _),) = drafter.last_skipped
+    assert fid == "?"
+
+
+def test_a_malformed_record_whose_id_cannot_be_read_does_not_crash():
+    class Hostile(dict):
+        def get(self, *args, **kwargs):
+            raise RuntimeError("boom")
+
+    drafter = Drafter()
+    drafter.propose(Path("."), [Hostile(detector="dead_code")], "")
+    assert drafter.last_skipped and drafter.last_skipped[0][0] == "?"
