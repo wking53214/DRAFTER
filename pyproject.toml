@@ -28,7 +28,7 @@ classifiers = [
 # commit the tag peels to in the comment.
 # To bump: see "Bumping the pins" in README.md.
 dependencies = [
-    "warden @ git+https://github.com/wking53214/Warden.git@9ecd1124e6c1b1c4ad7daed37b17f9009662dd9d",  # Warden 0.13.10
+    "warden @ git+https://github.com/wking53214/Warden.git@68f2a955f486a8ebb230c4395c88f7e99ee47c48",  # Warden 0.14.0
     "cns @ git+https://github.com/wking53214/CNS.git@v2.0.0",  # v2.0.0 = b13e5d2f9e0e4291725f82794b89117c3d840ac1
 ]
 
