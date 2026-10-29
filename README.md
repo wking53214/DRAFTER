@@ -37,7 +37,7 @@ python3 -m venv .venv && .venv/bin/pip install -r contracts/install-stack.txt
 
 Run that from a checkout of CNS on its `main` branch, which holds the install file. The `drafter @` line in the file says which commit of this repository it installs; that can be older than the checkout you are reading, because the file is re-pinned by hand. This README names no commit of this repository, because a commit cannot name itself. Installing this package alone from a release tag, `git+https://github.com/wking53214/DRAFTER.git@<tag>`, is the intended form for a tagged release; it has not been tried here, so use a checkout or the install file. Do not install this package alone from `main`: `main` moves, and nothing there says it was tested with the other repositories.
 
-CNS note: the CNS pin moved from `v1.9.0` to `v2.0.0` in 0.2.10. Drafter imports only the `Defect` and `FileEdit` rows from CNS (`cns.defect`, `cns.seat`); `cns.stack.StackPin`, the one CNS 2.0.0 item that now requires a full commit, is not imported here.
+CNS note: the CNS pin moved from `v1.9.0` to `v2.0.0` in 0.2.10, and from `v2.0.0` to `v2.1.0` in 0.2.14. Drafter imports only the `Defect` and `FileEdit` rows from CNS (`cns.defect`, `cns.seat`); `cns.stack.StackPin`, the one CNS 2.0.0 item that now requires a full commit, is not imported here. The 0.2.14 move came with the Warden pin, and no Drafter code was edited for it.
 
 ### Bumping the pins
 
@@ -68,7 +68,7 @@ drafter propose PATH ... --scope documentation # as Warden sets it from the gran
 drafter propose PATH ... -v                    # -v logs INFO to stderr, -vv adds refusals and tracebacks
 ```
 
-With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.2 and later refuse a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so. Warden 0.13.4 and later (the pin is 0.14.0) also require that root to be a git checkout with a readable version and refuse a site-packages root, so point `--ghost-root` at a clone, not at an installed copy.
+With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.2 and later refuse a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so. Warden 0.13.4 and later (the pin is 0.15.1) also require that root to be a git checkout with a readable version and refuse a site-packages root, so point `--ghost-root` at a clone, not at an installed copy.
 
 It prints one JSON object on stdout: `proposal` (the intent, scope, affected files and every edit with its `old` and `new` text, or `null`) and `skipped` (each finding Drafter recognised but left alone, with the reason). It writes no file. Exit codes:
 
