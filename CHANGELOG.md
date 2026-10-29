@@ -6,6 +6,18 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.13] - 2026-10-29, not tagged
+
+### Changed
+
+- Step R1: the README says, in WHAT THIS IS and in CEILINGS CODE CANNOT FIX, that the owner released the Drafter repository
+  from its role as a required seat in the Horsemen circuit on 2026-10-29. Released means removed from the circuit and nothing
+  else: no code, test, history or CI was changed. Drafter still works on its own (its fixers, the `Drafter` class when a
+  caller seats it, and the `drafter propose` dry run). The seat interface stays and Warden's claim seat fills it for a real
+  change. Warden 0.15.0 lets a pinned manifest leave Drafter out; until the pins move, the circuit still installs it. Drafter
+  is free to be reborn elsewhere, as intent only.
+- Version 0.2.13 and this entry. No pin changed.
+
 ## [0.2.12] - 2026-10-24
 
 Wave F: the fixes the round-6 independent audit of the final release set asked for. Each item was reproduced before it
