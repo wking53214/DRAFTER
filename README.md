@@ -8,6 +8,8 @@ The in-loop maker. It reads what Ghost Tools found and proposes one fix at a tim
 
 Drafter is one of seven repositories in a stack that improves code under human control. Given a finding from Ghost Tools (a code scanner), it returns the change that would close it, as data: a list of file edits with the old and the new text. [Warden](https://github.com/wking53214/Warden) runs the loop around it. Warden asks Drafter for a change, checks that a person granted it, runs the target's tests, applies the change, runs the tests again, and has Ghost look again. Drafter is then asked again, until it has nothing left to propose.
 
+**Status: released from the circuit (2026-10-29).** Drafter was a required seat in the Horsemen circuit, and the owner has released the repository from that role. Released means removed from the circuit and nothing else: the code, the tests, the history and the CI are intact, and Drafter still works on its own as described below. The reason, with the evidence: it proposed nothing in thirteen of thirteen self-hosting runs (2026-10-22 and 2026-10-23); the record is in the CNS repository under `docs/evidence/selfhosting-records-2026-10-23/`. The seat interface stays, and Warden's claim seat fills it for a real change. What remains usable on its own: its fixers, the `Drafter` class when a caller seats it, and the `drafter propose` dry run. In the circuit, Warden 0.15.0 lets a pinned manifest leave Drafter out; until the pins move, the circuit still installs it. Drafter is free to be reborn elsewhere; that is the owner's intent, not a plan or a promise.
+
 It is small and young. It has three fixers, it has been tested on scratch repositories and not on large real code, and the sections below say plainly what is and is not shown.
 
 Version `0.2.12`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
@@ -244,6 +246,7 @@ An earlier, smaller record exists in Warden's `docs/REGISTRY.json` (row 5, 2026-
 
 - The repository is young. Its history in `CHANGELOG.md` starts on 2026-10-08.
 - One person maintains it, and no outside users are known, so nobody has yet run it on code its author did not choose.
+- The owner released it from the Horsemen circuit on 2026-10-29 (see the status note under WHAT THIS IS). Nothing in it was removed, and it keeps working on its own.
 - Releases are tagged by the owner, so check the repository's tags and releases for what exists.
 - Experimental, version 0.2.12. Changes are listed in `CHANGELOG.md`.
 - Every test here uses scratch repositories or fixtures. Only use on a large, real codebase would show how often the refusals fire and whether the text checks hold up, and that has not happened.
