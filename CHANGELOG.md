@@ -6,6 +6,17 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.14] - 2026-10-29, not tagged
+
+### Changed
+
+- Pin21 step 1: the CNS pin is the tag `v2.1.0` (`cns @ git+https://github.com/wking53214/CNS.git@v2.1.0`, comment
+  `v2.1.0 = fde931ffa89aebec95647742256ad53033bd3d02`), from `v2.0.0`, and the Warden pin moves from 0.14.0
+  (`68f2a955f486a8ebb230c4395c88f7e99ee47c48`) to 0.15.1 (`fe9c8b35778de680d04b2a57775ac6a6831f4799`). No Drafter code
+  changed. The README CNS note and the Warden release it names follow the pins. The CI tested set is not moved. No
+  test was edited.
+- Pin21 step 2: version 0.2.14 (`drafter/__init__.py`, `pyproject.toml`, README version line) and this entry.
+
 ## [0.2.13] - 2026-10-29, not tagged
 
 ### Changed
