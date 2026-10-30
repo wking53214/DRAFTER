@@ -28,7 +28,7 @@ classifiers = [
 # commit the tag is in the comment (v2.2.0 is a lightweight tag).
 # To bump: see "Bumping the pins" in README.md.
 dependencies = [
-    "warden @ git+https://github.com/wking53214/Warden.git@fade3ca5ee6435393d0588782929ff8de72f988f",  # Warden 0.16.1
+    "warden @ git+https://github.com/wking53214/Warden.git@df212db32c230a00cf4100038637be873262a816",  # Warden 0.16.2
     "cns @ git+https://github.com/wking53214/CNS.git@v2.2.0",  # v2.2.0 = ce6bd05578a7a3e3cafa0cfa1e9a2cca8a5f171f
 ]
 
