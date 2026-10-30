@@ -22,7 +22,7 @@ import logging
 
 from .seat import Drafter
 
-__version__ = "0.2.15"
+__version__ = "0.2.16"
 __all__ = ["Drafter", "__version__"]
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())

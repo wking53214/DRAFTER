@@ -6,6 +6,16 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.16] - 2026-10-30, not tagged
+
+### Changed
+
+- Stage 3 wave 2 step 1: the Warden pin moves from 0.16.1 (`fade3ca5ee6435393d0588782929ff8de72f988f`) to 0.16.2
+  (`df212db32c230a00cf4100038637be873262a816`), which refuses a `--stack` folder that holds a seat the pinned manifest omits
+  even when `--claim-commit`, `--claim-diff`, `--drafter` or `--finisher` supplies the seat. The README sentence that names
+  the pinned Warden release follows. No Drafter code changed. The CI tested set is not moved. No test was edited.
+- Stage 3 wave 2 step 2: version 0.2.16 (`drafter/__init__.py`, `pyproject.toml`, README version line) and this entry.
+
 ## [0.2.15] - 2026-10-30, not tagged
 
 ### Changed
