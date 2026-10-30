@@ -2,7 +2,7 @@
 
 *Formerly Proposer. Renamed in October 2026; the role is unchanged.*
 
-The in-loop maker. It reads what Ghost Tools found and proposes one fix at a time. It writes none of the files it proposes to change.
+A fix proposer that Warden can seat with `--drafter`; it is released from the circuit. It reads what Ghost Tools found and proposes one fix at a time. It writes none of the files it proposes to change.
 
 ## WHAT THIS IS
 
@@ -12,7 +12,7 @@ Drafter was one of the repositories of a stack that improves code under human co
 
 It is small and young. It has three fixers, it has been tested on scratch repositories and not on large real code, and the sections below say plainly what is and is not shown.
 
-Version `0.2.17`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
+Version `0.2.18`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
 
 ## HOW TO INSTALL AND RUN
 
@@ -29,13 +29,7 @@ python3 -m venv .venv
 
 That installs Drafter and the exact Warden commit and CNS tag named in `pyproject.toml` (`dependencies`). `pip check` should print "No broken requirements found." On a machine without the rest of the circuit the last command skips the tests that need it, and says why for each skip; see "What works" for how CI runs them all.
 
-To install the whole circuit with the install file in the CNS repository, which pins every repository (this one included) to the commits it names:
-
-```bash
-python3 -m venv .venv && .venv/bin/pip install -r contracts/install-stack.txt
-```
-
-Run that from a checkout of CNS on its `main` branch, which holds the install file. The `drafter @` line in the file says which commit of this repository it installs; that can be older than the checkout you are reading, because the file is re-pinned by hand. This README names no commit of this repository, because a commit cannot name itself. Installing this package alone from a release tag, `git+https://github.com/wking53214/DRAFTER.git@<tag>`, is the intended form for a tagged release; it has not been tried here, so use a checkout or the install file. Do not install this package alone from `main`: `main` moves, and nothing there says it was tested with the other repositories.
+The CNS install file (`contracts/install-stack.txt` in the CNS repository) no longer installs this repository. Drafter is released from the circuit, so the file installs the five circuit repositories only and lists Drafter, with the commit of this repository, under released seats in `contracts/released-seats.json`. To install Drafter, use a checkout of this repository as above (`pip install -e '.[dev]'`). This README names no commit of this repository, because a commit cannot name itself. Installing this package alone from a release tag, `git+https://github.com/wking53214/DRAFTER.git@<tag>`, is the intended form for a tagged release; it has not been tried here, so use a checkout. Do not install this package alone from `main`: `main` moves, and nothing there says it was tested with the other repositories.
 
 CNS note: the CNS pin moved from `v1.9.0` to `v2.0.0` in 0.2.10, from `v2.0.0` to `v2.1.0` in 0.2.14, and from `v2.1.0` to `v2.2.0` in 0.2.15. Drafter imports only the `Defect` and `FileEdit` rows from CNS (`cns.defect`, `cns.seat`); `cns.stack.StackPin`, the one CNS 2.0.0 item that now requires a full commit, is not imported here. The 0.2.14 and 0.2.15 moves came with the Warden pin (0.15.1, then 0.16.1), and no Drafter code was edited for either.
 
@@ -68,7 +62,7 @@ drafter propose PATH ... --scope documentation # as Warden sets it from the gran
 drafter propose PATH ... -v                    # -v logs INFO to stderr, -vv adds refusals and tracebacks
 ```
 
-With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.2 and later refuse a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so. Warden 0.13.4 and later (the pin is 0.16.3) also require that root to be a git checkout with a readable version and refuse a site-packages root, so point `--ghost-root` at a clone, not at an installed copy.
+With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.2 and later refuse a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so. Warden 0.13.4 and later (the pin is 0.16.4) also require that root to be a git checkout with a readable version and refuse a site-packages root, so point `--ghost-root` at a clone, not at an installed copy.
 
 It prints one JSON object on stdout: `proposal` (the intent, scope, affected files and every edit with its `old` and `new` text, or `null`) and `skipped` (each finding Drafter recognised but left alone, with the reason). It writes no file. Exit codes:
 
@@ -90,7 +84,7 @@ It prints one JSON object on stdout: `proposal` (the intent, scope, affected fil
 - Writing files, granting permission, running tests, deciding the loop is done (Warden).
 - Testing whether the detectors are any good (SWIZZLE).
 - The answer key (ASSAY).
-- Beautifying the code and writing the final README (Burnish, once, after the loop ends).
+- Beautifying the code and writing the final README (Burnish, which is released from the circuit and works on its own).
 
 ### Shape
 
@@ -185,7 +179,7 @@ Open ones, with what they cost:
 - The list fixer cannot see what is on the left of `in`. Against a list, `x in NAME` is False for an unhashable `x`; against a set it raises `TypeError`. If a caller ever passes a list or a dict there, the fixed code crashes where the old code was silently False, and only a test that exercises that call will catch it. Found by red team on 2026-10-14; left as a limit because refusing it would refuse every fix. No test can hold this one.
 - A line that has a `|` anywhere is treated as a table row and refused. This costs a missed fix.
 - The claim wording changes the meaning slightly on purpose: "N tests passed" becomes "at least M `test_*` functions", because Ghost counts test functions and does not run them. Where the claim began a sentence, the sentence starts "The suite holds"; elsewhere it reads "at least M ...". Odd sentences can still read a little stiffly.
-- The stack install alone leaves this repository's own suite red. The recipe in the CNS install file installs `ghost-tools` into site-packages, and Warden refuses a Ghost root inside site-packages, so the tests that seat the real Ghost fail (10 failed in the self-hosting record below) until a ghost_tools checkout is on `PYTHONPATH` and the other clones sit beside this one (`CIRCUIT_ROOT`). The `integration` job does exactly that. This is a gap in the install recipe, not fixed here; no test can hold it.
+- A pip-installed `ghost-tools` is not enough for this repository's own suite. The CNS install file puts `ghost-tools` in site-packages, and Warden refuses a Ghost root inside site-packages, so the tests that seat the real Ghost fail (10 failed in the self-hosting record below, made when the file still installed Drafter) until a ghost_tools checkout is on `PYTHONPATH` and the other clones sit beside this one (`CIRCUIT_ROOT`). The `integration` job does exactly that. The file no longer installs Drafter, so this concerns running this suite in that file's environment, not installing Drafter; no test can hold it.
 - The text scanner and the Markdown checks are hand-rolled, so they are long, and a long hand-written scanner is where the next bug is most likely to be.
 
 ## WHAT BROKE AND HOW IT WAS FIXED
@@ -230,7 +224,7 @@ In the order it happened. Each line gives the version that fixed it (with the da
 
 ## SELF-HOSTING
 
-The whole circuit, as it stood before the owner released the Drafter, Burnish and WATCHER_MCU from it (2026-10-29), has been run over this repository. The full record is in the CNS repository, https://github.com/wking53214/CNS, in `docs/evidence/SELFHOSTING_2026-10-23.md` (on the CNS branch `claude/horsemen-production-status-5wsndb` until that branch is merged), with the run records beside it. It was made on 2026-10-22 to 2026-10-23 on a fresh clone at version 0.2.11, which is before the changes listed under 0.2.12 in `CHANGELOG.md`.
+The whole circuit, as it stood before the owner released the Drafter, Burnish and WATCHER_MCU from it (2026-10-29), has been run over this repository. The full record is in the CNS repository, https://github.com/wking53214/CNS, in `docs/evidence/SELFHOSTING_2026-10-23.md` (on the CNS branch `claude/horsemen-production-status-5wsndb`; when it reaches the CNS `main` is the owner's decision), with the run records beside it. It was made on 2026-10-22 to 2026-10-23 on a fresh clone at version 0.2.11, which is before the changes listed under 0.2.12 in `CHANGELOG.md`.
 
 What it recorded for this repository:
 
@@ -248,7 +242,7 @@ An earlier, smaller record exists in Warden's `docs/REGISTRY.json` (row 5, 2026-
 - One person maintains it, and no outside users are known, so nobody has yet run it on code its author did not choose.
 - The owner released it from the Horsemen circuit on 2026-10-29 (see the status note under WHAT THIS IS). Nothing in it was removed, and it keeps working on its own.
 - Releases are tagged by the owner, so check the repository's tags and releases for what exists. One stray tag, `v0.10.0`, exists from an earlier numbering; it does not match this package's version (see `CHANGELOG.md`).
-- Experimental, version 0.2.17. Changes are listed in `CHANGELOG.md`.
+- Experimental, version 0.2.18. Changes are listed in `CHANGELOG.md`.
 - Every test here uses scratch repositories or fixtures. Only use on a large, real codebase would show how often the refusals fire and whether the text checks hold up, and that has not happened.
 - The dependencies are git URLs pinned to commits, not releases from PyPI, so installing needs GitHub to be reachable.
 

@@ -6,6 +6,14 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.18] - 2026-10-30, not tagged
+
+### Changed
+
+- The Warden pin moves from 0.16.3 (`cb45681ea80f845fb8f23bb091bda7f587c6a547`) to 0.16.4 (`57f7bb7b12314f0ba30697cff9a846c749e3d606`). No Drafter code changed. The CI tested set is not moved.
+- README: the install section no longer says the CNS install file pins this repository: the file installs the five circuit repositories only and lists Drafter under released seats, so Drafter is installed from a checkout. The "stack install alone leaves this suite red" bullet and the self-hosting sentence "until that branch is merged" now say what is true. The text that called Drafter "the in-loop maker" and "the seat that proposes fixes" (README, `STACK.md`, `pyproject.toml` description) now says it is a fix proposer Warden can seat with `--drafter`, released from the circuit.
+- Version 0.2.18 (`drafter/__init__.py`, `pyproject.toml`, README version lines).
+
 ## [0.2.17] - 2026-10-30, not tagged
 
 ### Changed

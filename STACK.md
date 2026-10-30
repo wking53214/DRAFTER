@@ -2,7 +2,7 @@
 
 **ASSURANCE (not the live decision path).**
 
-The seat that proposes fixes. Reads the scanner's findings and returns one change at a time, as data. Writes no file of the user's, never counts, never decides it is right.
+A fix proposer that Warden can seat with `--drafter`; it is released from the circuit. Reads the scanner's findings and returns one change at a time, as data. Writes no file of the user's, never counts, never decides it is right.
 
 ## The circuit
 
