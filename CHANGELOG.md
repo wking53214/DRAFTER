@@ -6,6 +6,20 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.15] - 2026-10-30, not tagged
+
+### Changed
+
+- Pin22 step 1: the CNS pin is the tag `v2.2.0` (`cns @ git+https://github.com/wking53214/CNS.git@v2.2.0`, comment
+  `v2.2.0 = ce6bd05578a7a3e3cafa0cfa1e9a2cca8a5f171f`, a lightweight tag), from `v2.1.0`. The `cns` package at v2.2.0
+  equals v2.1.0 except its version string. The Warden pin moves from 0.15.1 (`fe9c8b35778de680d04b2a57775ac6a6831f4799`)
+  to 0.16.1 (`fade3ca5ee6435393d0588782929ff8de72f988f`). No Drafter code changed. The README CNS note and the Warden
+  release it names follow the pins. The CI tested set is not moved. No test was edited.
+- Pin22 step 2: version 0.2.15 (`drafter/__init__.py`, `pyproject.toml`, README version line) and this entry.
+- Runs that seat this Drafter under Warden now carry eight declined checks (`mutate`, `kernel`, `structure`, `tests`,
+  `project`, `secrets`, `correlate`, `ledger`), not seven, because ghost_tools 1.10.11 lists the ledger as declined under
+  `--no-ledger`. Drafter states no such count in its text and its code is unchanged.
+
 ## [0.2.14] - 2026-10-29, not tagged
 
 ### Changed

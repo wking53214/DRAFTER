@@ -12,7 +12,7 @@ Drafter is one of seven repositories in a stack that improves code under human c
 
 It is small and young. It has three fixers, it has been tested on scratch repositories and not on large real code, and the sections below say plainly what is and is not shown.
 
-Version `0.2.14`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
+Version `0.2.15`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
 
 ## HOW TO INSTALL AND RUN
 
@@ -248,7 +248,7 @@ An earlier, smaller record exists in Warden's `docs/REGISTRY.json` (row 5, 2026-
 - One person maintains it, and no outside users are known, so nobody has yet run it on code its author did not choose.
 - The owner released it from the Horsemen circuit on 2026-10-29 (see the status note under WHAT THIS IS). Nothing in it was removed, and it keeps working on its own.
 - Releases are tagged by the owner, so check the repository's tags and releases for what exists.
-- Experimental, version 0.2.14. Changes are listed in `CHANGELOG.md`.
+- Experimental, version 0.2.15. Changes are listed in `CHANGELOG.md`.
 - Every test here uses scratch repositories or fixtures. Only use on a large, real codebase would show how often the refusals fire and whether the text checks hold up, and that has not happened.
 - The dependencies are git URLs pinned to commits, not releases from PyPI, so installing needs GitHub to be reachable.
 
