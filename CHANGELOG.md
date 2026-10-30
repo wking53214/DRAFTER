@@ -6,6 +6,22 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.17] - 2026-10-30, not tagged
+
+### Changed
+
+- The Warden pin moves from 0.16.2 (`df212db32c230a00cf4100038637be873262a816`) to 0.16.3 (`cb45681ea80f845fb8f23bb091bda7f587c6a547`).
+  The README sentence that names the pinned Warden release follows (`tests/test_readme_ledger.py` holds it to the pin comment, and
+  was not edited). No Drafter code changed. The CI tested set is not moved.
+- `STACK.md` says the circuit is five repositories (ASSAY, ghost_tools, SWIZZLE, Warden, Judge), that any actor's real change enters through Warden's claim seat, that DRAFTER, BURNISH and WATCHER_MCU are released from the circuit, that a bare `--stack` still requires all six checkouts, and that every run declines eight Ghost checks (the count is eight because ghost_tools 1.10.11 lists the ledger as declined under `--no-ledger`, not because Warden declined a new check).
+- The README no longer says "one of seven repositories". The status paragraph says where the thirteen self-hosting records are
+  (the CNS repository, `docs/evidence/selfhosting-records-2026-10-23/`) and how "thirteen of thirteen" was counted: in twelve runs
+  the loop asked Drafter and the first cycle ended `NOTHING_TO_PROPOSE`, and in the thirteenth (ASSAY, `REJECT`) the run was rejected
+  before any cycle, so Drafter was never asked. The two statements about recorded circuit runs now agree (they said "the only
+  recorded one" and "the old one"): there are two, the 2026-10-14 hand run and the 2026-10-22 and 2026-10-23 self-hosting run. The
+  stray `v0.10.0` tag is mentioned where the README tells readers to check tags. The "seven declined" line is labelled a dated record.
+- Version 0.2.17 (`drafter/__init__.py`, `pyproject.toml`, README version lines) and this entry.
+
 ## [0.2.16] - 2026-10-30, not tagged
 
 ### Changed
