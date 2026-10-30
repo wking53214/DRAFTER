@@ -6,9 +6,9 @@ The in-loop maker. It reads what Ghost Tools found and proposes one fix at a tim
 
 ## WHAT THIS IS
 
-Drafter is one of seven repositories in a stack that improves code under human control. Given a finding from Ghost Tools (a code scanner), it returns the change that would close it, as data: a list of file edits with the old and the new text. [Warden](https://github.com/wking53214/Warden) runs the loop around it. Warden asks Drafter for a change, checks that a person granted it, runs the target's tests, applies the change, runs the tests again, and has Ghost look again. Drafter is then asked again, until it has nothing left to propose.
+Drafter was one of the repositories of a stack that improves code under human control; the circuit is now five repositories (ghost_tools, SWIZZLE, ASSAY, JUDGE and WARDEN) and Drafter is released from it (see the status note below). Given a finding from Ghost Tools (a code scanner), it returns the change that would close it, as data: a list of file edits with the old and the new text. [Warden](https://github.com/wking53214/Warden) runs the loop around it. Warden asks Drafter for a change, checks that a person granted it, runs the target's tests, applies the change, runs the tests again, and has Ghost look again. Drafter is then asked again, until it has nothing left to propose.
 
-**Status: released from the circuit (2026-10-29).** Drafter was a required seat in the Horsemen circuit, and the owner has released the repository from that role. Released means removed from the circuit and nothing else: the code, the tests, the history and the CI are intact, and Drafter still works on its own as described below. The reason, with the evidence: it proposed nothing in thirteen of thirteen self-hosting runs (2026-10-22 and 2026-10-23); the record is in the CNS repository under `docs/evidence/selfhosting-records-2026-10-23/`. The seat interface stays, and Warden's claim seat fills it for a real change. What remains usable on its own: its fixers, the `Drafter` class when a caller seats it, and the `drafter propose` dry run. In the circuit, Warden 0.15.0 lets a pinned manifest leave Drafter out; until the pins move, the circuit still installs it. Drafter is free to be reborn elsewhere; that is the owner's intent, not a plan or a promise.
+**Status: released from the circuit (2026-10-29).** Drafter was a required seat in the Horsemen circuit, and the owner has released the repository from that role. Released means removed from the circuit and nothing else: the code, the tests, the history and the CI are intact, and Drafter still works on its own as described below. The reason, with the evidence: it proposed nothing in thirteen of thirteen self-hosting runs (2026-10-22 and 2026-10-23). The thirteen records are in the CNS repository under `docs/evidence/selfhosting-records-2026-10-23/`. "Thirteen of thirteen" was counted this way: in twelve runs the loop asked Drafter and the first cycle ended `NOTHING_TO_PROPOSE`, and in the thirteenth (ASSAY, decision `REJECT`) the run was rejected before any cycle, so Drafter was never asked. The seat interface stays, and Warden's claim seat fills it for a real change. What remains usable on its own: its fixers, the `Drafter` class when a caller seats it, and the `drafter propose` dry run. In the circuit, the pinned manifest in the CNS repository omits Drafter, and Warden 0.15.0 and later let a pinned manifest leave Drafter out; a bare `--stack` still requires a Drafter checkout, and a stack without one needs a proposer (`--claim-commit`, `--claim-diff` or an explicit `--drafter`). Drafter is free to be reborn elsewhere; that is the owner's intent, not a plan or a promise.
 
 It is small and young. It has three fixers, it has been tested on scratch repositories and not on large real code, and the sections below say plainly what is and is not shown.
 
@@ -172,7 +172,7 @@ Not proven:
 - That the text-level definition check agrees with a real parser on every possible Python file. It is stricter than Python on purpose and refuses when unsure, and Warden's keep test and comment-out test remain the real gate. But it was written and tested by hand, not checked against a large body of real code.
 - Python's newer f-string rules (quotes reused inside braces) can confuse the small scanner. The likely result is a refusal, not a wrong edit, but this is not proven.
 - That an edit Drafter proposes is correct. Drafter does not run anything. A proposal is only as good as Ghost's finding and the refusals above, and the check that it did no harm is Warden's: the target's own tests before and after, and Ghost looking again.
-- Any run of the whole circuit with the current versions. The only recorded run is the old one named under "Self-hosting".
+- Any run of the whole circuit with the current versions. The recorded runs are the 2026-10-14 hand run (Warden's `docs/REGISTRY.json`, rows 3 to 5) and the 2026-10-22 and 2026-10-23 self-hosting run at version 0.2.11 named under "Self-hosting"; both used older versions and the old circuit.
 - Behaviour on macOS or Windows. CI uses `ubuntu-latest` only.
 
 More fixers would be added only for a Ghost detector whose finding has a safe mechanical answer.
@@ -230,13 +230,13 @@ In the order it happened. Each line gives the version that fixed it (with the da
 
 ## SELF-HOSTING
 
-The whole circuit has been run over this repository. The full record is in the CNS repository, https://github.com/wking53214/CNS, in `docs/evidence/SELFHOSTING_2026-10-23.md` (on the CNS branch `claude/horsemen-production-status-5wsndb` until that branch is merged), with the run records beside it. It was made on 2026-10-22 to 2026-10-23 on a fresh clone at version 0.2.11, which is before the changes listed under 0.2.12 in `CHANGELOG.md`.
+The whole circuit, as it stood before the owner released the Drafter, Burnish and WATCHER_MCU from it (2026-10-29), has been run over this repository. The full record is in the CNS repository, https://github.com/wking53214/CNS, in `docs/evidence/SELFHOSTING_2026-10-23.md` (on the CNS branch `claude/horsemen-production-status-5wsndb` until that branch is merged), with the run records beside it. It was made on 2026-10-22 to 2026-10-23 on a fresh clone at version 0.2.11, which is before the changes listed under 0.2.12 in `CHANGELOG.md`.
 
 What it recorded for this repository:
 
 - Run 1 ended `FINISH_REJECTED` (exit 1): this repository's suite was red from the start, 383 passed and 10 failed, because the recipe left `ghost-tools` in site-packages (see Known defects). That is the install-recipe gap, not a defect in a proposal.
 - Run 2, with a ghost_tools checkout on `PYTHONPATH` and the other clones beside the target, ended `ACCEPT` (exit 0). The Judge's words: suite 393 passed, 0 skipped; Ghost reported 37 findings at the start and 37 at the end, none new; SWIZZLE's proofs held and 28 of 28 attacks held; ASSAY's answer key caught 5 of 7 failure modes, with a floor of 3. One change was kept: a README section written by Burnish 0.3.11.
-- Seven checks were declined in both runs, so each record carries 7 gaps: `mutate`, `kernel`, `structure`, `tests`, `project`, `secrets` and `correlate`.
+- Seven checks were declined in both runs (a dated record: a run today declines eight, because ghost_tools 1.10.11 lists the ledger as declined), so each record carries 7 gaps: `mutate`, `kernel`, `structure`, `tests`, `project`, `secrets` and `correlate`.
 
 What the record does not mean: an `ACCEPT` with 7 gaps does not mean there are no secrets, no weak tests, no mutation survivors and no structural problems; those checks did not run. Ghost still reports 37 findings on this repository; `ACCEPT` means none were new. The README text Burnish wrote was not reviewed by a person. The record covers version 0.2.11 only. It has not been repeated on the current commit, and the accepted run used the earlier Burnish 0.3.11 and was not re-run with the later one.
 
@@ -247,7 +247,7 @@ An earlier, smaller record exists in Warden's `docs/REGISTRY.json` (row 5, 2026-
 - The repository is young. Its history in `CHANGELOG.md` starts on 2026-10-08.
 - One person maintains it, and no outside users are known, so nobody has yet run it on code its author did not choose.
 - The owner released it from the Horsemen circuit on 2026-10-29 (see the status note under WHAT THIS IS). Nothing in it was removed, and it keeps working on its own.
-- Releases are tagged by the owner, so check the repository's tags and releases for what exists.
+- Releases are tagged by the owner, so check the repository's tags and releases for what exists. One stray tag, `v0.10.0`, exists from an earlier numbering; it does not match this package's version (see `CHANGELOG.md`).
 - Experimental, version 0.2.16. Changes are listed in `CHANGELOG.md`.
 - Every test here uses scratch repositories or fixtures. Only use on a large, real codebase would show how often the refusals fire and whether the text checks hold up, and that has not happened.
 - The dependencies are git URLs pinned to commits, not releases from PyPI, so installing needs GitHub to be reachable.
