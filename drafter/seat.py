@@ -22,6 +22,21 @@ log = logging.getLogger(__name__)
 Fixer = Callable[..., Optional[FileEdit]]
 
 
+def _record_id(item: Mapping[Any, Any]) -> str:
+    """The `id` of a raw record that could not be turned into a finding, or '?' when it has no readable one.
+
+    Only plain text or a whole number counts; anything else (a missing key, null, a list, a float, a boolean) is
+    not an identity. A record whose own lookup raises is '?' too: this runs inside the boundary that must not crash.
+    """
+    try:
+        raw = item.get("id")
+        if isinstance(raw, bool) or not isinstance(raw, (str, int)) or raw == "":
+            return "?"
+        return str(raw)[:120]
+    except Exception:  # noqa: BLE001 - boundary: a hostile mapping may raise anything
+        return "?"
+
+
 class Drafter:
     """Walks Ghost's findings in order and proposes the first fix it can make safely.
 
@@ -137,11 +152,12 @@ class Drafter:
                 return defect
             except (AttributeError, IndexError, KeyError, TypeError, ValueError) as err:
                 # The shapes a malformed finding can take: a field of the wrong type, a missing mapping.
-                log.warning("a finding could not be read (%s: %s)", type(err).__name__, brief(err))
-                self._skip("?", f"a finding could not be read ({type(err).__name__}: {brief(err)})")
+                fid = _record_id(item)
+                log.warning("a finding (%s) could not be read (%s: %s)", fid, type(err).__name__, brief(err))
+                self._skip(fid, f"a finding could not be read ({type(err).__name__}: {brief(err)})")
                 return None
             except Exception as err:  # noqa: BLE001 - boundary: a hostile mapping may raise anything
-                self._internal("?", "reading a finding", err)
+                self._internal(_record_id(item), "reading a finding", err)
                 return None
         self._skip("?", f"an item that is not a finding ({type(item).__name__}) was ignored")
         return None

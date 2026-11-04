@@ -28,10 +28,11 @@ BLOCKED_DIRS = frozenset({
     "tests", ".git", ".venv", "venv", ".github", ".tox", ".nox", "node_modules",
     "site-packages", "__pycache__",
 })
-#: Files that configure or drive the test run. Never edited by a maker.
+#: Files that configure or drive the test run, or build and package the project. Never edited by a maker.
+#: Names are compared in lower case. `requirements*.txt` is matched by pattern in `check_editable`.
 BLOCKED_FILES = frozenset({
     "conftest.py", "pyproject.toml", "pytest.ini", "tox.ini", "setup.cfg", "noxfile.py",
-    ".coveragerc", "makefile",
+    ".coveragerc", "makefile", "setup.py", "manifest.in",
 })
 
 Reason = Callable[[str], None]
@@ -101,8 +102,8 @@ def check_editable(rel: PurePath) -> None:
             refuse(f"{rel.as_posix()} is under '{part}', which the Drafter never edits")
     name = parts[-1]
     if (name in BLOCKED_FILES or (name.startswith("test_") and name.endswith(".py"))
-            or name.endswith("_test.py")):
-        refuse(f"{rel.as_posix()} is a test or test-configuration file, which the Drafter never edits")
+            or name.endswith("_test.py") or (name.startswith("requirements") and name.endswith(".txt"))):
+        refuse(f"{rel.as_posix()} is a test, test-configuration or build file, which the Drafter never edits")
 
 
 def resolve_in_target(target: Path, file: Any) -> tuple[Path, PurePath]:

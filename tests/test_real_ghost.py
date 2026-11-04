@@ -24,6 +24,9 @@ def _dead(findings):
 
 def _build_code(root, where):
     root.mkdir()
+    # A project root, as any real project has one: Ghost then says whether a computed lookup is possible, and the
+    # Drafter, which declines a finding that does not say, can act on it.
+    (root / "pyproject.toml").write_text("[project]\nname = 't'\n", encoding="utf-8")
     pkg = root
     for part in where:
         pkg = pkg / part
@@ -53,6 +56,22 @@ def test_a_real_dead_code_finding_is_proposed_and_applied_cleanly(tmp_path, wher
     assert [c.outcome for c in result.cycles] == ["APPLIED", "NOTHING_TO_PROPOSE"]
     text = (root.joinpath(*where) / "m.py").read_text(encoding="utf-8")
     assert "# def orphan():" in text and "def used():\n    return 1" in text
+
+
+def test_real_ghost_on_a_tree_with_no_project_root_says_nothing_and_the_drafter_declines(tmp_path):
+    """Ghost leaves `dynamic_lookup_possible` out when it found no project root and no computed lookup; the Drafter
+    treats 'not said' as 'not safe' and gives the reason."""
+    ghost_root()
+    root = tmp_path / "tgt"
+    root.mkdir()
+    (root / "m.py").write_text(MODULE, encoding="utf-8")
+    (root / "test_u.py").write_text(TEST_U.format(imp="m"), encoding="utf-8")
+    findings = _dead(real_findings(root))
+    assert [f["attributes"]["name"] for f in findings] == ["orphan"]
+    assert "dynamic_lookup_possible" not in findings[0]["attributes"]
+    drafter = Drafter()
+    assert drafter.propose(root, defects_from_ghost(findings), "base") is None
+    assert "does not say whether a computed lookup is possible" in drafter.last_skipped[0][1]
 
 
 def test_an_unverified_run_puts_the_applied_edit_back(tmp_path):

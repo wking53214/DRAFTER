@@ -36,7 +36,10 @@ def _fix(target: Path, defect: Defect) -> FileEdit:
     hook = attrs.get("framework_hook")
     if hook != "no":
         refuse(f"Ghost does not say 'framework_hook: no' (it says {hook!r}), so a framework may call it")
-    dynamic = attrs.get("dynamic_lookup_possible", "no")
+    if "dynamic_lookup_possible" not in attrs:
+        refuse("Ghost does not say whether a computed lookup is possible here (no dynamic_lookup_possible), "
+               "so 'unused' cannot be trusted")
+    dynamic = attrs["dynamic_lookup_possible"]
     if dynamic != "no":
         refuse(f"Ghost says a computed lookup is possible here (dynamic_lookup_possible: {dynamic!r}), "
                "so 'unused' cannot be trusted")

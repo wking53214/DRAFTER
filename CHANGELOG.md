@@ -6,6 +6,181 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.18] - 2026-10-30, not tagged
+
+### Changed
+
+- The Warden pin moves from 0.16.3 (`cb45681ea80f845fb8f23bb091bda7f587c6a547`) to 0.16.4 (`57f7bb7b12314f0ba30697cff9a846c749e3d606`). No Drafter code changed. The CI tested set is not moved.
+- README: the install section no longer says the CNS install file pins this repository: the file installs the five circuit repositories only and lists Drafter under released seats, so Drafter is installed from a checkout. The "stack install alone leaves this suite red" bullet and the self-hosting sentence "until that branch is merged" now say what is true. The text that called Drafter "the in-loop maker" and "the seat that proposes fixes" (README, `STACK.md`, `pyproject.toml` description) now says it is a fix proposer Warden can seat with `--drafter`, released from the circuit.
+- Version 0.2.18 (`drafter/__init__.py`, `pyproject.toml`, README version lines).
+
+## [0.2.17] - 2026-10-30, not tagged
+
+### Changed
+
+- The Warden pin moves from 0.16.2 (`df212db32c230a00cf4100038637be873262a816`) to 0.16.3 (`cb45681ea80f845fb8f23bb091bda7f587c6a547`).
+  The README sentence that names the pinned Warden release follows (`tests/test_readme_ledger.py` holds it to the pin comment, and
+  was not edited). No Drafter code changed. The CI tested set is not moved.
+- `STACK.md` says the circuit is five repositories (ASSAY, ghost_tools, SWIZZLE, Warden, Judge), that any actor's real change enters through Warden's claim seat, that DRAFTER, BURNISH and WATCHER_MCU are released from the circuit, that a bare `--stack` still requires all six checkouts, and that every run declines eight Ghost checks (the count is eight because ghost_tools 1.10.11 lists the ledger as declined under `--no-ledger`, not because Warden declined a new check).
+- The README no longer says "one of seven repositories". The status paragraph says where the thirteen self-hosting records are
+  (the CNS repository, `docs/evidence/selfhosting-records-2026-10-23/`) and how "thirteen of thirteen" was counted: in twelve runs
+  the loop asked Drafter and the first cycle ended `NOTHING_TO_PROPOSE`, and in the thirteenth (ASSAY, `REJECT`) the run was rejected
+  before any cycle, so Drafter was never asked. The two statements about recorded circuit runs now agree (they said "the only
+  recorded one" and "the old one"): there are two, the 2026-10-14 hand run and the 2026-10-22 and 2026-10-23 self-hosting run. The
+  stray `v0.10.0` tag is mentioned where the README tells readers to check tags. The "seven declined" line is labelled a dated record.
+- Version 0.2.17 (`drafter/__init__.py`, `pyproject.toml`, README version lines) and this entry.
+
+## [0.2.16] - 2026-10-30, not tagged
+
+### Changed
+
+- Stage 3 wave 2 step 1: the Warden pin moves from 0.16.1 (`fade3ca5ee6435393d0588782929ff8de72f988f`) to 0.16.2
+  (`df212db32c230a00cf4100038637be873262a816`), which refuses a `--stack` folder that holds a seat the pinned manifest omits
+  even when `--claim-commit`, `--claim-diff`, `--drafter` or `--finisher` supplies the seat. The README sentence that names
+  the pinned Warden release follows. No Drafter code changed. The CI tested set is not moved. No test was edited.
+- Stage 3 wave 2 step 2: version 0.2.16 (`drafter/__init__.py`, `pyproject.toml`, README version line) and this entry.
+
+## [0.2.15] - 2026-10-30, not tagged
+
+### Changed
+
+- Pin22 step 1: the CNS pin is the tag `v2.2.0` (`cns @ git+https://github.com/wking53214/CNS.git@v2.2.0`, comment
+  `v2.2.0 = ce6bd05578a7a3e3cafa0cfa1e9a2cca8a5f171f`, a lightweight tag), from `v2.1.0`. The `cns` package at v2.2.0
+  equals v2.1.0 except its version string. The Warden pin moves from 0.15.1 (`fe9c8b35778de680d04b2a57775ac6a6831f4799`)
+  to 0.16.1 (`fade3ca5ee6435393d0588782929ff8de72f988f`). No Drafter code changed. The README CNS note and the Warden
+  release it names follow the pins. The CI tested set is not moved. No test was edited.
+- Pin22 step 2: version 0.2.15 (`drafter/__init__.py`, `pyproject.toml`, README version line) and this entry.
+- Runs that seat this Drafter under Warden now carry eight declined checks (`mutate`, `kernel`, `structure`, `tests`,
+  `project`, `secrets`, `correlate`, `ledger`), not seven, because ghost_tools 1.10.11 lists the ledger as declined under
+  `--no-ledger`. Drafter states no such count in its text and its code is unchanged.
+
+## [0.2.14] - 2026-10-29, not tagged
+
+### Changed
+
+- Pin21 step 1: the CNS pin is the tag `v2.1.0` (`cns @ git+https://github.com/wking53214/CNS.git@v2.1.0`, comment
+  `v2.1.0 = fde931ffa89aebec95647742256ad53033bd3d02`), from `v2.0.0`, and the Warden pin moves from 0.14.0
+  (`68f2a955f486a8ebb230c4395c88f7e99ee47c48`) to 0.15.1 (`fe9c8b35778de680d04b2a57775ac6a6831f4799`). No Drafter code
+  changed. The README CNS note and the Warden release it names follow the pins. The CI tested set is not moved. No
+  test was edited.
+- Pin21 step 2: version 0.2.14 (`drafter/__init__.py`, `pyproject.toml`, README version line) and this entry.
+
+## [0.2.13] - 2026-10-29, not tagged
+
+### Changed
+
+- Step R1: the README says, in WHAT THIS IS and in CEILINGS CODE CANNOT FIX, that the owner released the Drafter repository
+  from its role as a required seat in the Horsemen circuit on 2026-10-29. Released means removed from the circuit and nothing
+  else: no code, test, history or CI was changed. Drafter still works on its own (its fixers, the `Drafter` class when a
+  caller seats it, and the `drafter propose` dry run). The seat interface stays and Warden's claim seat fills it for a real
+  change. Warden 0.15.0 lets a pinned manifest leave Drafter out; until the pins move, the circuit still installs it. Drafter
+  is free to be reborn elsewhere, as intent only.
+- Version 0.2.13 and this entry. No pin changed.
+
+## [0.2.12] - 2026-10-24
+
+Wave F: the fixes the round-6 independent audit of the final release set asked for. Each item was reproduced before it
+was changed.
+
+### Changed
+
+- Step 1: the guard `test_the_drafter_never_opens_a_file_for_writing` is no longer a substring search. It reads the
+  syntax tree of every module and fails on any call that opens a file for writing or changes the filesystem (`open`,
+  `io.open`, `io.FileIO`, `Path.open`, `os.open`, aliased imports, a mode it cannot read, `write_text`, `os.replace`,
+  `shutil`, `tempfile`, `eval`, `exec`), with one site named in an exact allowlist: `_silence_stdout` in
+  `drafter/cli.py`, which opens the null device on an error path. A second test shows the checker flags each spelling
+  and does not flag plain reads. The README and `STACK.md` no longer say "never opens a file for writing" or "never
+  writes"; they say that no file of the user's is written and that one error path opens the null device.
+- Step 2: `setup.py`, `MANIFEST.in` and `requirements*.txt` are never edited. Reproduced first: a `dead_code` finding in
+  `setup.py` got a proposal. The README lists the blocked names; only `.py` and Markdown files are rewritten by the
+  current fixers, so the non-Python names are blocked as a precaution.
+- Step 3: a dead-code finding with no `dynamic_lookup_possible` key declines, as a missing `framework_hook` already
+  did (it used to count as "no"). The README says so.
+- Step 4: a malformed record is skipped under its own `id` when that is readable, not under `?`.
+- Step 5: the Warden pin moves from `b57b81e1c98333c43d422666c89a8fcf3ae6eaca` (0.13.9) to the full commit
+  `9ecd1124e6c1b1c4ad7daed37b17f9009662dd9d` (Warden 0.13.10); CNS stays `@v2.0.0`. The four `integration` sibling pins
+  (ghost_tools `5a9154d`, JUDGE `c3001b8`, SWIZZLE `3f35dad`, ASSAY `184679c`) are not moved; the workflow comment and
+  the README now call them the last set this repository's CI tested on its own, not the head of any `main`. The README
+  loses its repeated sentences, its SELF-HOSTING section cites the CNS repository's
+  `docs/evidence/SELFHOSTING_2026-10-23.md` and says what it recorded and does not mean, a known defect is added (the
+  stack install alone leaves this repository's suite red), and the ledger gets an entry for each fix above.
+
+### Tests
+
+- Step 1: `tests/test_independence.py` gains `test_the_write_checker_sees_every_spelling_it_is_meant_to`;
+  `test_the_drafter_never_opens_a_file_for_writing` keeps its name and now uses the syntax-tree checker.
+- Step 2: `tests/test_paths.py` gains `test_a_dead_code_finding_in_a_build_script_gets_no_proposal` (failed on 0.2.11 for
+  `setup.py`), `test_every_build_and_test_configuration_name_is_blocked` and
+  `test_a_name_that_only_looks_like_a_build_file_is_still_editable`.
+- Step 3: `tests/test_conservative.py` gains the missing-key test (failed on 0.2.11) and its counterpart with the key set
+  to `no`. Edited under the rule that a test asserting changed behaviour may be updated, and nothing more: the two helpers
+  that build hand-made `dead_code` findings (`tests/support.py` `dead_finding`, `tests/test_dead_code_fixer.py`
+  `_finding`) now carry `dynamic_lookup_possible: "no"`, as real Ghost does for a repository with a project root.
+  Without it every test built from them would have tested the missing-key case.
+  The real-Ghost tests found the same thing from the other side: `tests/test_real_ghost.py` built its scratch target with
+  no project file, and real Ghost then leaves `dynamic_lookup_possible` out, so the three `dead_code` cases there got no
+  proposal. `_build_code` now writes a `pyproject.toml` into the target, as any real project has (edited in the Step 5
+  commit, caused by Step 3, found when the full suite ran). A new test in the same file records the other side: real Ghost
+  on a tree with no project root omits the key and the Drafter declines with the reason.
+- Step 4: `tests/test_odd_input.py` and `tests/test_cli.py` gain tests that a malformed record keeps its id (failed on
+  0.2.11) and that an unreadable id still files under `?`.
+- Step 5: `tests/test_readme_ledger.py` holds the self-hosting numbers to constants that name the evidence file, and holds
+  the tested-set wording. Edited, with the reason: `tests/test_release.py`
+  `test_the_readme_does_not_restate_the_pinned_versions` asserted that the strings `0.11.5`, `v0.11` and
+  `pinned to Warden tag` were absent from the README and `pyproject.toml`, a guard from an older era that could not fail;
+  it now asserts that the pin comment names exactly one Warden release. The no-full-commit-in-the-README assertion is
+  unchanged.
+
+## [0.2.11] - 2026-10-22
+
+### Changed
+
+- The `integration` job's JUDGE checkout moves from `e5c3f98f0f3998a8c5dac458ad0fcf4e050eb074` (0.4.8) to
+  `c3001b86764c8946dbc3d367c977aed53cbab9b7` (0.4.10), the head of the JUDGE branch
+  `claude/horsemen-production-status-5wsndb`. The workflow comments that said JUDGE was not moved in the 0.2.10
+  re-pin are updated to match. Nothing else changed.
+- No pre-existing test was edited.
+
+## [0.2.10] - 2026-10-22
+
+### Changed
+
+- CNS is re-pinned from the tag `v1.9.0` to the tag `v2.0.0`: `cns @ git+https://github.com/wking53214/CNS.git@v2.0.0`
+  with the comment `# v2.0.0 = b13e5d2f9e0e4291725f82794b89117c3d840ac1`, the same text as every other repository of
+  the circuit. Drafter imports only `cns.defect` and `cns.seat`; its suite passes against the installed CNS 2.0.0
+  (pip's `direct_url.json` records `requested_revision` `v2.0.0` and the commit above).
+- Warden is re-pinned from `380894f0304ef40587dd29efd41b4ceccf94a5d3` (0.13.8) to the full commit
+  `b57b81e1c98333c43d422666c89a8fcf3ae6eaca` (Warden 0.13.9). That Warden requires CNS `v2.0.0`, so
+  `pip install -e ".[dev]"` resolves and `pip check` is clean. The `Warden.git` spelling is unchanged.
+- The `integration` job's sibling checkouts move to the heads of the sibling branches
+  `claude/horsemen-production-status-5wsndb`: ghost_tools `5a9154d3c76670f5bf1f46d845acadfed46d7bc8` (1.10.8, was
+  `2d03d8e`, 1.10.6), SWIZZLE `3f35dad5568b590c2ee36e60533d50a35db94aa2` (0.8.7, was `5226584`, 0.8.5) and ASSAY
+  `184679c06e0a636a9a08a8403efa410b375c9429` (0.11.5, was `a1732f2`, 0.11.3). JUDGE stays at `e5c3f98` (0.4.8). The
+  comments beside the refs said "head of ... main", which stopped being true; they now name the package version only,
+  and the paragraph above them no longer says the commits are the heads of `main` or that none carries a release tag.
+- The README is rewritten: what this is, how to install and run (the commands were run in a fresh virtual environment),
+  what works and the test or CI job that shows it, what does not work or is not proven, the open defects, what broke
+  and how it was fixed (checked against this file, the git history and the tests), the self-hosting record and the
+  ceilings code cannot fix. The "what is beautiful" section is gone (it claimed that the worst Drafter can do is
+  propose less, which the known defects below it contradict). The Status paragraph is gone with its statement about
+  tags. The Warden release the README names is now 0.13.9. The preamble of this file still carries its older
+  sentences about tags and is left as written.
+
+### Fixed
+
+- `STACK.md` called CNS private. It is a public repository.
+
+### Tests
+
+- Added `tests/test_readme_ledger.py`: the required README sections exist once and in order, every test the README
+  names exists, every version and date in the ledger matches a heading in this file, the CI jobs the README names are
+  in the workflow, the Warden release the README names equals the one in the pin comment, no marketing words, no
+  em dashes, no statement about whether release tags exist, and `STACK.md` does not call CNS private.
+- No pre-existing test was edited.
+- Checked on Python 3.11, 3.12 and 3.13 with the real circuit (ghost_tools, JUDGE, SWIZZLE and ASSAY on the path,
+  numpy and matplotlib installed as the `integration` job does): the whole suite passes with no skips; `ruff check .`,
+  `mypy` and `pip check` are clean.
+
 ## [0.2.9] - 2026-10-22
 
 ### Changed

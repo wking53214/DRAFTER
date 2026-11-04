@@ -366,6 +366,14 @@ def test_a_record_of_the_wrong_shape_is_skipped_not_a_traceback(tmp_path, capsys
     assert "could not be read" in entry["reason"]
 
 
+def test_a_record_of_the_wrong_shape_is_listed_under_its_own_id(tmp_path, capsys):
+    bad = dead_finding(fid="ghost-bad")
+    bad["evidence"] = 5
+    main(["propose", str(_tree(tmp_path)), "--findings", str(_findings(tmp_path, bad))])
+    report = json.loads(capsys.readouterr().out)
+    assert [s["finding"] for s in report["skipped"]] == ["ghost-bad"]
+
+
 def test_a_bad_record_does_not_stop_the_good_one_after_it(tmp_path, capsys):
     bad = {"id": "bad", "detector": "doc_test_count_drift", "evidence": "not an object"}
     good = doc_finding(line=3)

@@ -51,9 +51,9 @@ def test_the_readme_does_not_restate_the_pinned_versions():
     """The pin lives in pyproject.toml. A tag or version restated in prose is wrong the day the pin moves."""
     # No commit at all, this repository's own included: a commit cannot name itself.
     assert not re.search(r"[0-9a-f]{40}", README), "the README restates a full commit; refer to pyproject.toml"
-    assert "pinned to Warden tag" not in README and "v0.11" not in README and "0.11.5" not in README
     pyproject_text = (REPO / "pyproject.toml").read_text(encoding="utf-8")
-    assert "0.11.5" not in pyproject_text, "the pin comment names a version the pin is not"
+    pin_line = next(ln for ln in pyproject_text.splitlines() if ln.lstrip().startswith('"warden @ '))
+    assert len(re.findall(r"Warden \d+\.\d+\.\d+", pin_line)) == 1, f"the pin comment must name one release: {pin_line}"
 
 
 def test_the_cns_dependency_is_pinned_to_its_release_tag():
