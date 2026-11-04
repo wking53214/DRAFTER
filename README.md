@@ -12,7 +12,7 @@ Drafter was one of the repositories of a stack that improves code under human co
 
 It is small and young. It has three fixers, it has been tested on scratch repositories and not on large real code, and the sections below say plainly what is and is not shown.
 
-Version `0.2.18`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
+Version `0.2.19`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
 
 ## HOW TO INSTALL AND RUN
 
@@ -62,7 +62,7 @@ drafter propose PATH ... --scope documentation # as Warden sets it from the gran
 drafter propose PATH ... -v                    # -v logs INFO to stderr, -vv adds refusals and tracebacks
 ```
 
-With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.2 and later refuse a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so. Warden 0.13.4 and later (the pin is 0.16.4) also require that root to be a git checkout with a readable version and refuse a site-packages root, so point `--ghost-root` at a clone, not at an installed copy.
+With neither `--findings` nor `--ghost-root` there is nothing to read findings from: Warden 0.13.2 and later refuse a Ghost scan with no named root (an installed Ghost Tools never stands in for one), and the command exits 3 and says so. Warden 0.13.4 and later (the pin is 0.16.5) also require that root to be a git checkout with a readable version and refuse a site-packages root, so point `--ghost-root` at a clone, not at an installed copy.
 
 It prints one JSON object on stdout: `proposal` (the intent, scope, affected files and every edit with its `old` and `new` text, or `null`) and `skipped` (each finding Drafter recognised but left alone, with the reason). It writes no file. Exit codes:
 
@@ -222,6 +222,8 @@ In the order it happened. Each line gives the version that fixed it (with the da
 
 **0.2.12** (2026-10-24): The README repeated two sentences, said no fresh self-hosting run was recorded after one had been, and called the CI sibling pins heads of `main`; a guard in `tests/test_release.py` still checked for strings from an older era (`0.11.5`). Found by the round-6 audit. The text is corrected, the dead guard is replaced by a check that the pin comment names one Warden release, and the self-hosting numbers are held by `test_the_self_hosting_paragraph_holds_the_numbers_in_the_evidence_record`.
 
+**0.2.19** (2026-11-04): the Warden pin moves to the Warden that refuses a pinned stack manifest which does not name all five circuit members, WARDEN included (a manifest omitting WARDEN used to be accepted with a dirty WARDEN checkout). No Drafter code changed, so nothing in this repository fixed or broke; `tests/test_warden_pin.py::test_the_pin_comment_names_the_installed_warden_release` holds the pin comment to the installed Warden.
+
 ## SELF-HOSTING
 
 The whole circuit, as it stood before the owner released the Drafter, Burnish and WATCHER_MCU from it (2026-10-29), has been run over this repository. The full record is in the CNS repository, https://github.com/wking53214/CNS, in `docs/evidence/SELFHOSTING_2026-10-23.md` (on the CNS branch `claude/horsemen-production-status-5wsndb`; when it reaches the CNS `main` is the owner's decision), with the run records beside it. It was made on 2026-10-22 to 2026-10-23 on a fresh clone at version 0.2.11, which is before the changes listed under 0.2.12 in `CHANGELOG.md`.
@@ -242,7 +244,7 @@ An earlier, smaller record exists in Warden's `docs/REGISTRY.json` (row 5, 2026-
 - One person maintains it, and no outside users are known, so nobody has yet run it on code its author did not choose.
 - The owner released it from the Horsemen circuit on 2026-10-29 (see the status note under WHAT THIS IS). Nothing in it was removed, and it keeps working on its own.
 - Releases are tagged by the owner, so check the repository's tags and releases for what exists. One stray tag, `v0.10.0`, exists from an earlier numbering; it does not match this package's version (see `CHANGELOG.md`).
-- Experimental, version 0.2.18. Changes are listed in `CHANGELOG.md`.
+- Experimental, version 0.2.19. Changes are listed in `CHANGELOG.md`.
 - Every test here uses scratch repositories or fixtures. Only use on a large, real codebase would show how often the refusals fire and whether the text checks hold up, and that has not happened.
 - The dependencies are git URLs pinned to commits, not releases from PyPI, so installing needs GitHub to be reachable.
 

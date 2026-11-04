@@ -6,6 +6,13 @@ repository from earlier numbering (it points at a commit whose `pyproject.toml` 
 to any version below. Releases of these versions are not tagged yet; tagging is the owner's decision. The versions
 below are the ones `pyproject.toml` declared.
 
+## [0.2.19] - 2026-11-04, not tagged
+
+### Changed
+
+- The Warden pin moves from 0.16.4 (`1a263fbefd164dff40b7064ab5381cda281694f2`) to 0.16.5 (`84cb89bbab94f09b32cb27ffd2c2ca21308d6cb4`), which refuses a pinned stack manifest that omits any of the five circuit members, WARDEN included. No Drafter code changed. The CI tested set and the CNS pin (`v2.3.0`) are not moved.
+- Version 0.2.19 (`drafter/__init__.py`, `pyproject.toml`, README version lines).
+
 ## [0.2.18] - 2026-10-30, not tagged
 
 ### Changed
