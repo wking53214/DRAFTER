@@ -12,7 +12,7 @@ Drafter was one of the repositories of a stack that improves code under human co
 
 It is small and young. It has three fixers, it has been tested on scratch repositories and not on large real code, and the sections below say plainly what is and is not shown.
 
-Version `0.2.23`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
+Version `0.2.24`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
 
 ## HOW TO INSTALL AND RUN
 
@@ -31,7 +31,7 @@ That installs Drafter and the exact Warden commit and CNS tag named in `pyprojec
 
 The CNS install file (`contracts/install-stack.txt` in the CNS repository) no longer installs this repository. Drafter is released from the circuit, so the file installs the five circuit repositories only and lists Drafter, with the commit of this repository, under released seats in `contracts/released-seats.json`. To install Drafter, use a checkout of this repository as above (`pip install -e '.[dev]'`). This README names no commit of this repository, because a commit cannot name itself. Installing this package alone from a release tag, `git+https://github.com/wking53214/DRAFTER.git@<tag>`, is the intended form for a tagged release; it has not been tried here, so use a checkout. Do not install this package alone from `main`: `main` moves, and nothing there says it was tested with the other repositories.
 
-CNS note: the CNS pin moved from `v1.9.0` to `v2.0.0` in 0.2.10, from `v2.0.0` to `v2.1.0` in 0.2.14, and from `v2.1.0` to `v2.2.0` in 0.2.15. On 2026-10-31 the circuit re-pinned CNS without a Drafter code change (and the Warden pin moved to the commit named in `pyproject.toml`), so the pin moved from `v2.2.0` to `v2.3.0` in 0.2.18, and from `v2.3.0` to `v3.0.0` in 0.2.21. Drafter imports only the `Defect` and `FileEdit` rows from CNS (`cns.defect`, `cns.seat`); `cns.stack.StackPin`, the one CNS 2.0.0 item that now requires a full commit, is not imported here. The 0.2.14 and 0.2.15 moves came with the Warden pin (0.15.1, then 0.16.1), and no Drafter code was edited for either.
+CNS note: the CNS pin moved from `v1.9.0` to `v2.0.0` in 0.2.10, from `v2.0.0` to `v2.1.0` in 0.2.14, and from `v2.1.0` to `v2.2.0` in 0.2.15. On 2026-10-31 the circuit re-pinned CNS without a Drafter code change (and the Warden pin moved to the commit named in `pyproject.toml`), so the pin moved from `v2.2.0` to `v2.3.0` in 0.2.18, and from `v2.3.0` to `v3.0.0` in 0.2.21, and from `v3.0.0` to `v4.0.0` in 0.2.24. Drafter imports only the `Defect` and `FileEdit` rows from CNS (`cns.defect`, `cns.seat`); `cns.stack.StackPin`, the one CNS 2.0.0 item that now requires a full commit, is not imported here. The 0.2.14 and 0.2.15 moves came with the Warden pin (0.15.1, then 0.16.1), and no Drafter code was edited for either.
 
 ### Bumping the pins
 
@@ -252,7 +252,7 @@ An earlier, smaller record exists in Warden's `docs/REGISTRY.json` (row 5, 2026-
 - One person maintains it, and no outside users are known, so nobody has yet run it on code its author did not choose.
 - The owner released it from the Horsemen circuit on 2026-10-29 (see the status note under WHAT THIS IS). Nothing in it was removed, and it keeps working on its own.
 - Releases are tagged by the owner, so check the repository's tags and releases for what exists. One stray tag, `v0.10.0`, exists from an earlier numbering; it does not match this package's version (see `CHANGELOG.md`).
-- Experimental, version 0.2.23. Changes are listed in `CHANGELOG.md`.
+- Experimental, version 0.2.24. Changes are listed in `CHANGELOG.md`.
 - Every test here uses scratch repositories or fixtures. Only use on a large, real codebase would show how often the refusals fire and whether the text checks hold up, and that has not happened.
 - The dependencies are git URLs pinned to commits, not releases from PyPI, so installing needs GitHub to be reachable.
 

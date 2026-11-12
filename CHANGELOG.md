@@ -8,6 +8,13 @@ below are the ones `pyproject.toml` declared.
 
 ## [Unreleased]
 
+## [0.2.24] - 2026-11-12
+
+### Changed
+
+- The CNS pin moves from `v3.0.0` to `v4.0.0` (`eabe6c72d71557b6327b80b42b0afab572acce80`), and the Warden pin moves to the Warden that requires it (`0f84759675bb6f31329fd2302113aab6c5d87382`, Warden 0.16.6). CNS v4.0.0 changes one behaviour (`subject_digest` refuses a Mapping that is not a dict and a non-list sequence); Drafter passes no such input.
+
+
 ### Changed
 
 - The Warden pin moves from `84cb89bbab94f09b32cb27ffd2c2ca21308d6cb4` to `8704ee7c89e1536c6946132e4544c371cc82a4a2`, the head of Warden's `main` on 2026-11-11 (Warden 0.16.5 at both; in `warden/` only docstrings and help text differ between them, and beside that Warden's own ghost_tools pin, its documents, its tests and its CI file). Reason: the `stack` job in CNS installs the circuit at each repository's head, and pip cannot install two commits of warden together; this repository named the older one. No version change here, and no test was edited.
