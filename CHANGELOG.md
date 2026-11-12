@@ -12,6 +12,12 @@ below are the ones `pyproject.toml` declared.
 
 - The Warden pin moves from `84cb89bbab94f09b32cb27ffd2c2ca21308d6cb4` to `8704ee7c89e1536c6946132e4544c371cc82a4a2`, the head of Warden's `main` on 2026-11-11 (Warden 0.16.5 at both; in `warden/` only docstrings and help text differ between them, and beside that Warden's own ghost_tools pin, its documents, its tests and its CI file). Reason: the `stack` job in CNS installs the circuit at each repository's head, and pip cannot install two commits of warden together; this repository named the older one. No version change here, and no test was edited.
 
+## [0.2.23] - 2026-11-12, not tagged
+
+### Changed
+
+- The Warden pin moves from `db210f94018575220ddebbd8e3139f4272d75ae0` to `b6d8ebb50f50c8c4d62a40a6bc66630f2c65d426`, the head of Warden's `main` after its second ghost_tools pin move (Warden 0.16.6 at both), because the CNS `stack` job needs every repository to name the same Warden commit. No Drafter code changed. Version 0.2.23 (`pyproject.toml`, `drafter/__init__.py`, README).
+
 ## [0.2.22] - 2026-11-11, not tagged
 
 ### Changed

@@ -12,7 +12,7 @@ Drafter was one of the repositories of a stack that improves code under human co
 
 It is small and young. It has three fixers, it has been tested on scratch repositories and not on large real code, and the sections below say plainly what is and is not shown.
 
-Version `0.2.22`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
+Version `0.2.23`. Python 3.11 or newer. It depends on Warden for the shapes of a proposal and on CNS for the shared rows (`Defect`, `FileEdit`), and on nothing else. Warden is pinned to a full commit and CNS to its release tag in `pyproject.toml`, which is the one place the pins are written; see "Bumping the pins" below.
 
 ## HOW TO INSTALL AND RUN
 
@@ -230,6 +230,8 @@ In the order it happened. Each line gives the version that fixed it (with the da
 
 **0.2.22** (2026-11-11): the Warden pin moves to the Warden whose ghost_tools pin matches ghost_tools' head. No Drafter code changed, so nothing in this repository was fixed or broken.
 
+**0.2.23** (2026-11-12): the Warden pin moves again, to the Warden whose ghost_tools pin matches ghost_tools' current head. No Drafter code changed, so nothing in this repository was fixed or broken.
+
 ## SELF-HOSTING
 
 The whole circuit, as it stood before the owner released the Drafter, Burnish and WATCHER_MCU from it (2026-10-29), has been run over this repository. The full record is in the CNS repository, https://github.com/wking53214/CNS, in `docs/evidence/SELFHOSTING_2026-10-23.md` (on the CNS branch `claude/horsemen-production-status-5wsndb`; when it reaches the CNS `main` is the owner's decision), with the run records beside it. It was made on 2026-10-22 to 2026-10-23 on a fresh clone at version 0.2.11, which is before the changes listed under 0.2.12 in `CHANGELOG.md`.
@@ -250,7 +252,7 @@ An earlier, smaller record exists in Warden's `docs/REGISTRY.json` (row 5, 2026-
 - One person maintains it, and no outside users are known, so nobody has yet run it on code its author did not choose.
 - The owner released it from the Horsemen circuit on 2026-10-29 (see the status note under WHAT THIS IS). Nothing in it was removed, and it keeps working on its own.
 - Releases are tagged by the owner, so check the repository's tags and releases for what exists. One stray tag, `v0.10.0`, exists from an earlier numbering; it does not match this package's version (see `CHANGELOG.md`).
-- Experimental, version 0.2.22. Changes are listed in `CHANGELOG.md`.
+- Experimental, version 0.2.23. Changes are listed in `CHANGELOG.md`.
 - Every test here uses scratch repositories or fixtures. Only use on a large, real codebase would show how often the refusals fire and whether the text checks hold up, and that has not happened.
 - The dependencies are git URLs pinned to commits, not releases from PyPI, so installing needs GitHub to be reachable.
 
