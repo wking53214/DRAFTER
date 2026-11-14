@@ -10,6 +10,7 @@ below are the ones `pyproject.toml` declared.
 
 ### Changed
 
+- The Warden pin moves from `0339c09a69497be2d2fc34d71872c8c8616c6668` to `3ed76136a8ad8c8a78ea8aaec4c5350026073f97`, the head of Warden's `main` after its ghost_tools pin move (Warden 1.0.0 at both; pin text only in Warden), in `pyproject.toml`. Reason: `seat_pins` in the CNS `stack` job reports that the seats pin Warden at a different commit from the install file, and pip cannot install two commits of warden together. No version change, no code change and no test was edited.
 - The Warden pin moves from `0f84759675bb6f31329fd2302113aab6c5d87382` (Warden 0.16.6) to `0339c09a69497be2d2fc34d71872c8c8616c6668` (Warden 1.0.0, the commit `v1.0.0` is tagged on), and the README names the new release. No Drafter code changed. The suite passes against it (428 passed, 14 skipped for the missing real Ghost and Judge). CNS stays at `v4.0.0`.
 
 ## [0.2.24] - 2026-11-12
