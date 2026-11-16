@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "drafter"
-version = "0.2.24"
+version = "0.2.25"
 description = "A fix proposer Warden can seat with --drafter (released from the circuit): turns Ghost Tools findings into proposed fixes. Proposes, never writes."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -28,8 +28,8 @@ classifiers = [
 # commit the tag is in the comment (v3.0.0 is an annotated tag).
 # To bump: see "Bumping the pins" in README.md.
 dependencies = [
-    "warden @ git+https://github.com/wking53214/Warden.git@5680f5cd4bc0f15b2d6cdbd8d2ec7607266430d6",  # Warden 1.0.0
-    "cns @ git+https://github.com/wking53214/CNS.git@v4.0.0",  # v4.0.0 = eabe6c72d71557b6327b80b42b0afab572acce80
+    "warden @ git+https://github.com/wking53214/Warden.git@e996e3cb6bf8c4db95a95ad42eead6e4f4b4bc06",  # Warden 1.0.0
+    "cns @ git+https://github.com/wking53214/CNS.git@v4.1.0",  # v4.1.0 = c84ef8c60079aae1753f92d9169d89081c670c22
 ]
 
 [project.urls]
