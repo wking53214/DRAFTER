@@ -9,8 +9,10 @@ from typing import Any, Callable, Mapping, Optional, Sequence
 
 from cns.defect import Defect
 from cns.seat import FileEdit
+
 from warden.models import Transformation, TransformationStatus, defects_from_ghost
 
+from ._reach import SKIPPED_FOLDERS
 from ._safe import brief, finding_id, internal_error_reason
 from .fixers import FIXERS
 
@@ -73,6 +75,7 @@ class Drafter:
     def __init__(self, fixers: Optional[dict[str, Fixer]] = None, scope: Optional[str] = None) -> None:
         self.fixers = dict(FIXERS if fixers is None else fixers)
         self.last_skipped: list[tuple[str, str]] = []
+        self._proposed_removal = False
         #: The scope the caller is authorised for ("code" or "documentation"), if it says. When set, findings
         #: whose fix lies outside it are skipped without reading any file, and in-scope findings are tried
         #: first. When None, findings are tried in the order given, as before.
@@ -88,10 +91,15 @@ class Drafter:
 
     def describe_skipped(self) -> tuple[str, ...]:
         """`last_skipped` as one readable line each, for a caller that wants to print it."""
-        return tuple(f"skipped {fid}: {reason}" for fid, reason in self.last_skipped)
+        lines = [f"skipped {fid}: {reason}" for fid, reason in self.last_skipped]
+        if self._proposed_removal:
+            lines.append("note: the search for other uses of a removed name left out these folders: "
+                         + ", ".join(SKIPPED_FOLDERS) + " (and symbolic links and files that hold a NUL byte)")
+        return tuple(lines)
 
     def propose(self, target: Path, observed: Sequence[Defect], baseline: str) -> Optional[Transformation]:
         self.last_skipped = []
+        self._proposed_removal = False
         try:
             root = Path(target).resolve()
         except (TypeError, ValueError, OSError):
@@ -129,6 +137,8 @@ class Drafter:
                 if len(self.last_skipped) == mark:
                     self._skip(fid, "no safe fix for this finding")
                 continue
+            if detector == "dead_code":
+                self._proposed_removal = True
             return self._wrap(root, defect, edit, baseline, fid)
         return None
 

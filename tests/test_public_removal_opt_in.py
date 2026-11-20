@@ -50,3 +50,20 @@ def test_opting_in_allows_a_public_name(tmp_path, monkeypatch):
     _repo(tmp_path)
     _, proposal = _propose(tmp_path, "unused", 5, 6)
     assert proposal is not None
+
+
+def test_a_removal_report_names_the_folders_the_search_skipped(tmp_path, monkeypatch):
+    monkeypatch.delenv("DRAFTER_ALLOW_PUBLIC_REMOVAL", raising=False)
+    _repo(tmp_path)
+    d, proposal = _propose(tmp_path, "_private_unused", 9, 10)
+    assert proposal is not None
+    note = d.describe_skipped()[-1]
+    assert note.startswith("note: the search for other uses") and "node_modules" in note and ".venv" in note
+
+
+def test_no_folder_note_when_nothing_was_removed(tmp_path, monkeypatch):
+    monkeypatch.delenv("DRAFTER_ALLOW_PUBLIC_REMOVAL", raising=False)
+    _repo(tmp_path)
+    d, proposal = _propose(tmp_path, "unused", 5, 6)
+    assert proposal is None
+    assert not any(line.startswith("note:") for line in d.describe_skipped())
