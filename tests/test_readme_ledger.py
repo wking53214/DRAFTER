@@ -132,7 +132,7 @@ def test_the_stack_page_does_not_call_a_public_repository_private():
 
 
 #: What the self-hosting record says about this repository. Copied from the CNS repository's
-#: docs/evidence/SELFHOSTING_2026-10-23.md (branch claude/horsemen-production-status-5wsndb until merged), rows
+#: docs/evidence/SELFHOSTING_2026-10-23.md (on CNS main), rows
 #: "DRAFTER run 1" and "DRAFTER run 2". The README quotes them; this test holds the quotes to these constants so a
 #: number cannot be changed in the README without changing it here, where the evidence file is named.
 SELFHOSTING_EVIDENCE = "docs/evidence/SELFHOSTING_2026-10-23.md"
