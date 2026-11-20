@@ -246,7 +246,7 @@ In the order it happened. Each line gives the version that fixed it (with the da
 
 ## SELF-HOSTING
 
-The whole circuit, as it stood before the owner released the Drafter, Burnish and WATCHER_MCU from it (2026-10-29), has been run over this repository. The full record is in the CNS repository, https://github.com/wking53214/CNS, in `docs/evidence/SELFHOSTING_2026-10-23.md` (on the CNS branch `claude/horsemen-production-status-5wsndb`; when it reaches the CNS `main` is the owner's decision), with the run records beside it. It was made on 2026-10-22 to 2026-10-23 on a fresh clone at version 0.2.11, which is before the changes listed under 0.2.12 in `CHANGELOG.md`. Dated note (2026-11-18): the CNS branch named above is gone from the CNS remote, and the record is on CNS `main` at the same path (checked with git on that date). The branch name stays in the sentence above because `tests/test_readme_ledger.py` requires it there; removing the two together is a code change.
+The whole circuit, as it stood before the owner released the Drafter, Burnish and WATCHER_MCU from it (2026-10-29), has been run over this repository. The full record is in the CNS repository, https://github.com/wking53214/CNS, in `docs/evidence/SELFHOSTING_2026-10-23.md` (on CNS `main`), with the run records beside it. It was made on 2026-10-22 to 2026-10-23 on a fresh clone at version 0.2.11, which is before the changes listed under 0.2.12 in `CHANGELOG.md`.
 
 What it recorded for this repository:
 

@@ -154,7 +154,7 @@ DECLINED_CHECKS = ("mutate", "kernel", "structure", "tests", "project", "secrets
 def test_the_self_hosting_paragraph_holds_the_numbers_in_the_evidence_record():
     text = section("## SELF-HOSTING")
     assert SELFHOSTING_EVIDENCE in text
-    assert "claude/horsemen-production-status-5wsndb" in text and "https://github.com/wking53214/CNS" in text
+    assert "on CNS `main`" in text and "https://github.com/wking53214/CNS" in text
     for quoted in SELFHOSTING_RECORDED:
         assert quoted in text, quoted
     for check in DECLINED_CHECKS:
