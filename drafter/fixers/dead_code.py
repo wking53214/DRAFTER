@@ -13,6 +13,7 @@ test.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -25,6 +26,10 @@ from .._safe import (Reason, attributes_of, check_editable, read_source, refuse,
                      resolve_in_target, run_fixer, split_lines, whole_int)
 
 _KINDS = {"function", "class"}
+
+#: Set to "1" to let the Drafter propose removing a public (no leading underscore) name. Off by default: the
+#: search for other uses reads this repository only, so a public name that only outside code calls looks unused.
+ALLOW_PUBLIC_REMOVAL_ENV = "DRAFTER_ALLOW_PUBLIC_REMOVAL"
 
 
 def fix_dead_code(target: Path, defect: Defect, why: Optional[Reason] = None) -> Optional[FileEdit]:
@@ -48,6 +53,9 @@ def _fix(target: Path, defect: Defect) -> FileEdit:
         refuse(f"the finding's name {name!r} is not a plain identifier")
     if kind not in _KINDS:
         refuse(f"the finding's kind {kind!r} is neither function nor class")
+    if not name.startswith("_") and os.environ.get(ALLOW_PUBLIC_REMOVAL_ENV) != "1":
+        refuse(f"{name!r} is a public name, and the search for other uses reads this repository only, so code in "
+               f"another repository may call it; set {ALLOW_PUBLIC_REMOVAL_ENV}=1 to allow removing public names")
     start = whole_int(attrs.get("line_start"), "line_start")
     end = whole_int(attrs.get("line_end"), "line_end")
     path, rel = resolve_in_target(target, getattr(defect, "file", None))
