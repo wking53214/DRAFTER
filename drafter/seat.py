@@ -11,7 +11,8 @@ from cns.defect import Defect
 from cns.seat import FileEdit
 from warden.models import Transformation, TransformationStatus, defects_from_ghost
 
-from ._safe import brief, finding_id, internal_error_reason
+from ._reach import SKIPPED_FOLDERS
+from ._safe import attributes_of, brief, finding_id, internal_error_reason
 from .fixers import FIXERS
 
 log = logging.getLogger(__name__)
@@ -70,9 +71,15 @@ class Drafter:
     #: What each built-in fixer's proposal touches, known without reading any file.
     SCOPES = {"doc_test_count_drift": "documentation", "dead_code": "code", "list_membership_in_loop": "code"}
 
-    def __init__(self, fixers: Optional[dict[str, Fixer]] = None, scope: Optional[str] = None) -> None:
+    def __init__(self, fixers: Optional[dict[str, Fixer]] = None, scope: Optional[str] = None,
+                 allow_public_removals: bool = False) -> None:
         self.fixers = dict(FIXERS if fixers is None else fixers)
         self.last_skipped: list[tuple[str, str]] = []
+        #: Whether a never-referenced function or class with a public name (no leading underscore) may be proposed
+        #: for removal. Off by default: the search for other uses reads only this repository, so a caller in
+        #: another repository is invisible, and a public name is the kind other code calls.
+        self.allow_public_removals = bool(allow_public_removals)
+        self._searched_for_uses = False
         #: The scope the caller is authorised for ("code" or "documentation"), if it says. When set, findings
         #: whose fix lies outside it are skipped without reading any file, and in-scope findings are tried
         #: first. When None, findings are tried in the order given, as before.
@@ -88,10 +95,15 @@ class Drafter:
 
     def describe_skipped(self) -> tuple[str, ...]:
         """`last_skipped` as one readable line each, for a caller that wants to print it."""
-        return tuple(f"skipped {fid}: {reason}" for fid, reason in self.last_skipped)
+        lines = [f"skipped {fid}: {reason}" for fid, reason in self.last_skipped]
+        if self._searched_for_uses:
+            lines.append("note: the search for other uses of a removed name left out these folders: "
+                         + ", ".join(SKIPPED_FOLDERS) + " (and symbolic links and files that hold a NUL byte)")
+        return tuple(lines)
 
     def propose(self, target: Path, observed: Sequence[Defect], baseline: str) -> Optional[Transformation]:
         self.last_skipped = []
+        self._searched_for_uses = False
         try:
             root = Path(target).resolve()
         except (TypeError, ValueError, OSError):
@@ -123,8 +135,17 @@ class Drafter:
             if self.scope and hint and hint != self.scope:
                 self._skip(fid, f"its fix needs {hint} scope and this run allows {self.scope}")
                 continue
+            if detector == "dead_code" and not self.allow_public_removals:
+                name = attributes_of(defect).get("name")
+                if isinstance(name, str) and name and not name.startswith("_"):
+                    self._skip(fid, f"{name!r} is a public name (no leading underscore), and the search for other uses "
+                                    "reads only this repository, so a caller elsewhere would not be seen; "
+                                    "allow_public_removals (--allow-public-removals) proposes it anyway")
+                    continue
             mark = len(self.last_skipped)
             edit = self._call(fixer, root, defect, fid)
+            if detector == "dead_code" and isinstance(edit, FileEdit):
+                self._searched_for_uses = True
             if not isinstance(edit, FileEdit) or not isinstance(edit.path, str):
                 if len(self.last_skipped) == mark:
                     self._skip(fid, "no safe fix for this finding")

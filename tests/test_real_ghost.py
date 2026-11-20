@@ -44,7 +44,7 @@ def test_a_real_dead_code_finding_is_proposed_and_applied_cleanly(tmp_path, wher
     _build_code(root, where)
     findings = _dead(real_findings(root))
     assert [f["attributes"]["name"] for f in findings] == ["orphan"]
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     proposal = drafter.propose(root, defects_from_ghost(findings), "base")
     assert proposal is not None, drafter.last_skipped
     expected = "/".join([*where, "m.py"])
@@ -69,7 +69,7 @@ def test_real_ghost_on_a_tree_with_no_project_root_says_nothing_and_the_drafter_
     findings = _dead(real_findings(root))
     assert [f["attributes"]["name"] for f in findings] == ["orphan"]
     assert "dynamic_lookup_possible" not in findings[0]["attributes"]
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     assert drafter.propose(root, defects_from_ghost(findings), "base") is None
     assert "does not say whether a computed lookup is possible" in drafter.last_skipped[0][1]
 
@@ -85,7 +85,7 @@ def test_an_unverified_run_puts_the_applied_edit_back(tmp_path):
     init_repo(root)
     original = (root / "m.py").read_text(encoding="utf-8")
     auth = grant("william", "transform", str(root.resolve()), "code", "test")
-    result = TagTeam(drafter=Drafter(), ghost_tools_root=ghost_root()).run(root, authorization=auth)
+    result = TagTeam(drafter=Drafter(allow_public_removals=True), ghost_tools_root=ghost_root()).run(root, authorization=auth)
     assert result.decision == "ACCEPT_UNVERIFIED", result.notes
     assert "The tree was put back" in " ".join(result.notes)
     assert (root / "m.py").read_text(encoding="utf-8") == original
@@ -108,7 +108,7 @@ def test_real_root_readme_claim_is_proposed_and_the_subfolder_one_is_declined(tm
     assert all(f["attributes"]["writable"] == "yes" for f in findings)
     seen = {}
     for defect in defects_from_ghost(findings):
-        drafter = Drafter()
+        drafter = Drafter(allow_public_removals=True)
         proposal = drafter.propose(root, (defect,), "base")
         if defect.file == "docs/README.md":
             assert proposal is None and "root README" in drafter.last_skipped[0][1]

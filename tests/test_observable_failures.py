@@ -64,7 +64,7 @@ def test_a_bug_inside_a_built_in_fixer_is_reported_not_swallowed(tmp_path, monke
 
 def test_a_bug_inside_a_custom_fixer_is_reported_not_swallowed(tmp_path, caplog):
     caplog.set_level(logging.DEBUG, logger="drafter")
-    drafter = Drafter(fixers={"dead_code": _boom})
+    drafter = Drafter(allow_public_removals=True, fixers={"dead_code": _boom})
     from warden.models import defects_from_ghost
     assert drafter.propose(_root(tmp_path), defects_from_ghost([dead_finding()]), "base") is None
     _assert_observable(drafter, caplog, "a fixer")
@@ -73,7 +73,7 @@ def test_a_bug_inside_a_custom_fixer_is_reported_not_swallowed(tmp_path, caplog)
 def test_a_bug_while_reading_a_finding_is_reported(tmp_path, monkeypatch, caplog):
     monkeypatch.setattr("drafter.seat.defects_from_ghost", _boom)
     caplog.set_level(logging.DEBUG, logger="drafter")
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     assert drafter.propose(_root(tmp_path), [doc_finding()], "base") is None      # a raw Ghost finding
     _assert_observable(drafter, caplog, "reading a finding")
 
@@ -81,7 +81,7 @@ def test_a_bug_while_reading_a_finding_is_reported(tmp_path, monkeypatch, caplog
 def test_a_malformed_finding_says_what_was_wrong(tmp_path, caplog):
     bad = doc_finding()
     bad["attributes"] = 5                                   # dict(5) raises TypeError
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     assert drafter.propose(_root(tmp_path), [bad], "base") is None
     ((_, reason),) = drafter.last_skipped
     assert reason.startswith("a finding could not be read (TypeError")

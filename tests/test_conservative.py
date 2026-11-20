@@ -157,7 +157,7 @@ def test_real_ghost_repros_all_propose_nothing(tmp_path):
     from warden.models import defects_from_ghost
     from drafter import Drafter
 
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     assert drafter.propose(root, defects_from_ghost(findings), "base") is None
 
 
@@ -217,10 +217,10 @@ def test_in_scope_findings_go_first_and_out_of_scope_ones_are_not_even_read(tmp_
     from drafter import Drafter
 
     root, findings = _mixed(tmp_path)
-    drafter = Drafter(scope="documentation")
+    drafter = Drafter(allow_public_removals=True, scope="documentation")
     proposal = drafter.propose(root, defects_from_ghost(findings), "b")        # dead_code listed first
     assert proposal.scope_hint == "documentation"
-    only_code = Drafter(scope="documentation")
+    only_code = Drafter(allow_public_removals=True, scope="documentation")
     assert only_code.propose(root, defects_from_ghost(findings[:1]), "b") is None
     assert "documentation" in only_code.last_skipped[0][1]
 
@@ -228,7 +228,7 @@ def test_in_scope_findings_go_first_and_out_of_scope_ones_are_not_even_read(tmp_
 def test_scope_of_is_cheap_and_needs_no_files():
     from drafter import Drafter
 
-    d = Drafter()
+    d = Drafter(allow_public_removals=True)
     assert d.scope_of({"detector": "dead_code"}) == "code"
     assert d.scope_of({"detector": "doc_test_count_drift"}) == "documentation"
     assert d.scope_of({"detector": "other"}) is None and d.scope_of(7) is None

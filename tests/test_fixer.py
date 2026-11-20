@@ -20,7 +20,7 @@ def _readme(root: Path, body: str) -> None:
 
 
 def _propose(root: Path, **kw):
-    return Drafter().propose(root, defects_from_ghost([_finding(**kw)]), "base")
+    return Drafter(allow_public_removals=True).propose(root, defects_from_ghost([_finding(**kw)]), "base")
 
 
 def test_a_stale_claim_becomes_a_truthful_sentence(tmp_path: Path):
@@ -70,5 +70,5 @@ def test_unknown_detectors_are_not_this_drafters_business(tmp_path: Path):
 def test_one_change_per_proposal(tmp_path: Path):
     _readme(tmp_path, "A. 16 tests passed.\n\nB. 16 tests passed.\n")
     defects = defects_from_ghost([_finding(line=1), _finding(line=3)])
-    proposal = Drafter().propose(tmp_path, defects, "base")
+    proposal = Drafter(allow_public_removals=True).propose(tmp_path, defects, "base")
     assert len(proposal.edits) == 1 and len(proposal.known_defects) == 1

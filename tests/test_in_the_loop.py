@@ -18,7 +18,7 @@ def test_the_loop_converges_on_a_fixed_readme(tmp_path: Path):
     init_repo(tmp_path)
     auth = grant("william", "transform", str(tmp_path.resolve()), "documentation", "test")
     # Real Ghost scans the folder, so the Judge gets Ghost's baseline report it needs.
-    result = TagTeam(drafter=Drafter(), **full_gate_kwargs()).run(tmp_path, authorization=auth)
+    result = TagTeam(drafter=Drafter(allow_public_removals=True), **full_gate_kwargs()).run(tmp_path, authorization=auth)
     assert result.converged and result.decision == "ACCEPT", result.notes
     assert [c.outcome for c in result.cycles] == ["APPLIED", "NOTHING_TO_PROPOSE"]
     assert "at least 79" in (tmp_path / "README.md").read_text(encoding="utf-8")

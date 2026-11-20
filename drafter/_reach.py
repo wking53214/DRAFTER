@@ -23,6 +23,8 @@ from ._safe import refuse
 
 _SKIP_DIRS = frozenset({".git", ".hg", ".svn", ".venv", "venv", "node_modules", "__pycache__",
                         ".tox", ".nox", "site-packages", ".mypy_cache", ".pytest_cache", ".ruff_cache"})
+#: The folders the search for other uses leaves out, in a stable order, for a report that wants to name them.
+SKIPPED_FOLDERS = tuple(sorted(_SKIP_DIRS))
 _MAX_FILE = 2_000_000
 _MAX_FILES = 20_000
 

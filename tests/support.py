@@ -83,7 +83,7 @@ def run_loop(target: Path, scope: str = "code"):
 
     init_repo(Path(target))
     auth = grant("william", "transform", str(Path(target).resolve()), scope, "test")
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     result = TagTeam(drafter=drafter, **full_gate_kwargs()).run(target, authorization=auth)
     return result, drafter
 
@@ -115,5 +115,5 @@ def propose(root, *findings):
 
     from drafter import Drafter
 
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     return drafter.propose(root, defects_from_ghost(list(findings)), "base"), drafter

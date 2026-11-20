@@ -33,7 +33,7 @@ def _repo(root: Path, source: str = SOURCE,
 
 
 def _propose(root: Path, **kw):
-    return Drafter().propose(root, defects_from_ghost([_finding(**kw)]), "base")
+    return Drafter(allow_public_removals=True).propose(root, defects_from_ghost([_finding(**kw)]), "base")
 
 
 def test_it_proposes_taking_out_exactly_the_flagged_lines(tmp_path):
@@ -68,7 +68,7 @@ def _run(root: Path):
     init_repo(root)
     auth = grant("william", "transform", str(root.resolve()), "code", "test")
     # No findings passed in: Ghost must scan for real, because the Judge reads Ghost's baseline report from that scan.
-    return TagTeam(drafter=Drafter(), **full_gate_kwargs()).run(root, authorization=auth)
+    return TagTeam(drafter=Drafter(allow_public_removals=True), **full_gate_kwargs()).run(root, authorization=auth)
 
 
 def test_in_the_loop_unused_code_is_commented_out_with_a_timestamp(tmp_path):
@@ -91,4 +91,4 @@ def test_in_the_loop_code_the_suite_runs_by_name_is_left_alone(tmp_path):
     assert (tmp_path / "pkg" / "mod.py").read_text(encoding="utf-8") == SOURCE
     # Real Ghost marks the code as reachable by computed lookup, so the Drafter refuses to propose removing it.
     dead = [f for f in real_findings(tmp_path) if f["detector"] == "dead_code"]
-    assert Drafter().propose(tmp_path, defects_from_ghost(dead), "base") is None
+    assert Drafter(allow_public_removals=True).propose(tmp_path, defects_from_ghost(dead), "base") is None

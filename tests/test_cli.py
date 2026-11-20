@@ -160,9 +160,9 @@ def test_a_ghost_root_that_does_not_hold_the_package_is_exit_3(tmp_path, capsys)
 def test_verbose_shows_a_refusal_on_stderr_and_default_is_quiet(tmp_path, capsys):
     root = _tree(tmp_path)
     findings = _findings(tmp_path, dead_finding(name="no_such_name", start=1, end=2))
-    main(["propose", str(root), "--findings", str(findings)])
+    main(["propose", str(root), "--findings", str(findings), "--allow-public-removals"])
     assert "refused" not in capsys.readouterr().err
-    main(["propose", str(root), "--findings", str(findings), "-vv"])
+    main(["propose", str(root), "--findings", str(findings), "--allow-public-removals", "-vv"])
     assert "refused" in capsys.readouterr().err
 
 

@@ -60,7 +60,7 @@ def _defect(**kw):
 @pytest.mark.parametrize("detector", ["dead_code", "doc_test_count_drift"])
 def test_defects_with_odd_fields_never_crash(tmp_path, change, detector):
     root = _root(tmp_path, **{"m.py": SRC, "README.md": "# T\n\nThe suite: 16 tests passed.\n"})
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     attrs = (dead_finding()["attributes"] if detector == "dead_code" else doc_finding()["attributes"])
     kw = {"detector": detector, "attributes": attrs, "file": "m.py" if detector == "dead_code" else "README.md",
           "line": 3}
@@ -87,7 +87,7 @@ def test_dead_code_attributes_of_the_wrong_type_are_refused(tmp_path, key, value
 @pytest.mark.parametrize("junk", [None, "text", 5, 3.5, [], ["x"], ("a",), object(), b"bytes"])
 def test_items_that_are_not_findings_are_ignored(tmp_path, junk):
     root = _root(tmp_path, **{"m.py": SRC})
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     assert drafter.propose(root, (junk,), "base") is None
     assert drafter.last_skipped
 
@@ -96,13 +96,13 @@ def test_a_good_finding_after_junk_is_still_proposed(tmp_path):
     root = _root(tmp_path, **{"m.py": SRC})
     from warden.models import defects_from_ghost
     items = (None, "junk", *defects_from_ghost([dead_finding(start=5, end=6)]))
-    proposal = Drafter().propose(root, items, "base")
-    assert proposal is not None and len(Drafter().propose(root, items, "base").edits) == 1
+    proposal = Drafter(allow_public_removals=True).propose(root, items, "base")
+    assert proposal is not None and len(Drafter(allow_public_removals=True).propose(root, items, "base").edits) == 1
 
 
 def test_raw_mapping_findings_are_accepted_and_broken_ones_are_not(tmp_path):
     root = _root(tmp_path, **{"m.py": SRC})
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     assert drafter.propose(root, (dead_finding(),), "base") is not None
     broken = dead_finding()
     broken["evidence"] = "not a mapping"
@@ -112,12 +112,12 @@ def test_raw_mapping_findings_are_accepted_and_broken_ones_are_not(tmp_path):
 @pytest.mark.parametrize("observed", [None, 5, object(), ()])
 def test_a_findings_argument_that_is_not_a_list_gives_nothing(tmp_path, observed):
     root = _root(tmp_path, **{"m.py": SRC})
-    assert Drafter().propose(root, observed, "base") is None
+    assert Drafter(allow_public_removals=True).propose(root, observed, "base") is None
 
 
 @pytest.mark.parametrize("target", [None, 5, "no/such/folder\x00", "/definitely/not/here"])
 def test_a_bad_target_gives_nothing(target):
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     assert drafter.propose(target, (), "base") is None
 
 
@@ -127,7 +127,7 @@ def test_a_fixer_that_blows_up_is_contained_and_reported(tmp_path):
     def broken(target, defect):
         raise RuntimeError("boom")
 
-    drafter = Drafter({"dead_code": broken})
+    drafter = Drafter({"dead_code": broken}, allow_public_removals=True)
     from warden.models import defects_from_ghost
     assert drafter.propose(root, defects_from_ghost([dead_finding()]), "base") is None
     assert "RuntimeError" in drafter.last_skipped[0][1]
@@ -143,7 +143,7 @@ def test_findings_of_other_kinds_are_not_listed_as_skipped(tmp_path):
 
 def test_the_skip_list_is_per_call_and_readable(tmp_path):
     root = _root(tmp_path, **{"m.py": SRC})
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     from warden.models import defects_from_ghost
     drafter.propose(root, defects_from_ghost([dead_finding(file="gone.py")]), "base")
     assert drafter.describe_skipped()[0].startswith("skipped ghost-dead1: no file")
@@ -156,7 +156,7 @@ def test_the_first_finding_it_cannot_use_does_not_hide_the_next(tmp_path):
     from warden.models import defects_from_ghost
     bad = dead_finding(file="gone.py", fid="ghost-bad")
     good = dead_finding(fid="ghost-good")
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     proposal = drafter.propose(root, defects_from_ghost([bad, good]), "base")
     assert proposal.known_defects[0].ghost_id == "ghost-good"
     assert drafter.last_skipped[0][0] == "ghost-bad"
@@ -167,7 +167,7 @@ def test_a_finding_with_no_usable_detector_is_recorded_not_dropped(tmp_path, det
     """A finding of a kind with no fixer is not listed; a finding that names no kind at all is, so the reason
     for 'no proposal' is never an empty list."""
     root = _root(tmp_path, **{"m.py": SRC})
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     bad = _defect(detector=detector)
     assert drafter.propose(root, [bad], "base") is None
     ((fid, reason),) = drafter.last_skipped
@@ -180,7 +180,7 @@ def test_a_malformed_record_is_skipped_under_its_own_id(field, value):
     finding it was. When the record's id is readable it is kept."""
     bad = dead_finding(fid="ghost-bad")
     bad[field] = value
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     assert drafter.propose(Path("."), [bad], "") is None
     ((fid, reason),) = drafter.last_skipped
     assert fid == "ghost-bad" and "could not be read" in reason
@@ -192,7 +192,7 @@ def test_a_malformed_record_with_no_readable_id_is_still_filed_under_a_question_
     bad = dead_finding()
     bad["evidence"] = 5
     bad["id"] = record_id
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     drafter.propose(Path("."), [bad], "")
     ((fid, _),) = drafter.last_skipped
     assert fid == "?"
@@ -203,6 +203,6 @@ def test_a_malformed_record_whose_id_cannot_be_read_does_not_crash():
         def get(self, *args, **kwargs):
             raise RuntimeError("boom")
 
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     drafter.propose(Path("."), [Hostile(detector="dead_code")], "")
     assert drafter.last_skipped and drafter.last_skipped[0][0] == "?"

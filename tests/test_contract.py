@@ -8,7 +8,7 @@ from drafter.seat import Drafter
 
 def test_the_drafter_declares_contract_1():
     assert Drafter.requires_contract == "1"
-    assert Drafter().requires_contract == "1"
+    assert Drafter(allow_public_removals=True).requires_contract == "1"
 
 
 def test_the_declaration_matches_the_warden_it_runs_with():

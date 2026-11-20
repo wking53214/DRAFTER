@@ -66,6 +66,10 @@ def _parser() -> argparse.ArgumentParser:
                         help="a Ghost Tools checkout (the folder holding the ghost_buster package) to scan with")
     propose.add_argument("--scope", choices=("code", "documentation"), default=None,
                          help="the grant's scope, as Warden would set it (default: any)")
+    propose.add_argument("--allow-public-removals", action="store_true", dest="allow_public_removals",
+                         help="also propose removing a public (no leading underscore) function or class that nothing "
+                              "in this repository mentions; off by default, because a caller in another repository "
+                              "would not be seen")
     propose.add_argument("-v", "--verbose", action="count", default=0,
                          help="log to stderr: -v for INFO, -vv for DEBUG (refusals and tracebacks)")
     return parser
@@ -132,7 +136,7 @@ def _propose(args: argparse.Namespace) -> int:
         print(f"drafter: could not obtain findings: {type(err).__name__}: {err}", file=sys.stderr)
         print("drafter: pass --findings FILE (a Ghost JSON report) or --ghost-root DIR", file=sys.stderr)
         return EXIT_NO_FINDINGS
-    drafter = Drafter(scope=args.scope)
+    drafter = Drafter(scope=args.scope, allow_public_removals=args.allow_public_removals)
     proposal = drafter.propose(target, observed, _BASELINE)
     report = {
         "drafter_version": __version__,

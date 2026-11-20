@@ -49,7 +49,7 @@ def _repo(root: Path, source: str = SOURCE, others: dict | None = None) -> None:
 
 
 def _propose(root: Path, **kw):
-    drafter = Drafter()
+    drafter = Drafter(allow_public_removals=True)
     return drafter.propose(root, defects_from_ghost([_finding(**kw)]), "base"), drafter
 
 
@@ -184,7 +184,7 @@ def test_test_files_are_never_edited(tmp_path):
 
 def test_under_a_documentation_grant_it_is_skipped_with_a_reason(tmp_path):
     _repo(tmp_path)
-    drafter = Drafter(scope="documentation")
+    drafter = Drafter(allow_public_removals=True, scope="documentation")
     assert drafter.propose(tmp_path, defects_from_ghost([_finding()]), "base") is None
     assert "needs code scope" in _reason(drafter)
 
@@ -197,7 +197,7 @@ def test_the_real_ghost_finding_carries_what_the_fixer_needs(tmp_path):
     assert len(found) == 1
     attrs = found[0]["attributes"]
     assert attrs["name"] == "BLOCKED" and attrs["container"] == "list" and attrs["defined_at"] == "1"
-    proposal = Drafter().propose(tmp_path, defects_from_ghost(found), "base")
+    proposal = Drafter(allow_public_removals=True).propose(tmp_path, defects_from_ghost(found), "base")
     assert proposal is not None and "BLOCKED = {" in proposal.edits[0].new
 
 
@@ -207,7 +207,7 @@ def test_through_the_whole_gate_the_set_stands_and_ghost_is_silent(tmp_path):
     _repo(tmp_path)
     init_repo(tmp_path)
     auth = grant("william", "transform", str(tmp_path.resolve()), "code", "test")
-    result = TagTeam(drafter=Drafter(), **full_gate_kwargs()).run(tmp_path, authorization=auth)
+    result = TagTeam(drafter=Drafter(allow_public_removals=True), **full_gate_kwargs()).run(tmp_path, authorization=auth)
     assert result.decision == "ACCEPT", result.reason
     assert (tmp_path / "pkg" / "mod.py").read_text(encoding="utf-8").startswith("BLOCKED = {")
     assert [c.outcome for c in result.cycles] == ["APPLIED", "NOTHING_TO_PROPOSE"]
